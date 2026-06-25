@@ -94,13 +94,34 @@
     .section-title { font-size: 15px; font-weight: 680; letter-spacing: .2px; }
     .subtle { font-size: 12px; color: var(--muted); }
 
+    .live-stage { max-width: 440px; margin: 0 auto; }
     .livebox {
-      border: 1px solid rgba(255,255,255,.64); border-radius: 16px; overflow: hidden;
-      background: #0c1220; aspect-ratio: 16 / 9; position: relative;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.16);
+      border: 1px solid rgba(255,255,255,.64); border-radius: 22px; overflow: hidden;
+      background: #0c1220; aspect-ratio: 9 / 16; position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 14px 28px rgba(10,132,255,.18);
     }
-    video, audio { width: 100%; height: 100%; object-fit: contain; }
+    video, audio { width: 100%; height: 100%; object-fit: cover; }
     .placeholder { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #ccd7ee; font-size: 14px; padding: 14px; }
+
+    .call-controls {
+      display:flex; justify-content:center; gap:10px; margin-top:10px;
+    }
+    .ctrl-round {
+      width:52px; height:52px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.74);
+      background: rgba(19,23,33,.62); color:#fff;
+      display:grid; place-items:center; font-size:18px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 8px 14px rgba(0,0,0,.28);
+      cursor:pointer;
+    }
+    .ctrl-round.active { background: rgba(10,132,255,.78); }
+    .ctrl-round.danger { background: rgba(255,59,48,.92); }
+    .door-cta {
+      width:100%; margin-top:12px; min-height:46px; border-radius:14px;
+      border:1px solid rgba(10,132,255,.45);
+      background: linear-gradient(180deg, rgba(10,132,255,.24), rgba(10,132,255,.12)), rgba(255,255,255,.72);
+      color: var(--ink); font-weight:650;
+    }
 
     .grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 10px; }
     .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-top: 10px; }
@@ -240,20 +261,30 @@
       <section class="content">
         <section id="section-live" class="section card">
           <div class="section-head">
-            <div class="section-title" id="titleLive">Live Video</div>
-            <div class="subtle">Kamera Stream</div>
+            <div class="section-title" id="titleLive">Vordertür</div>
+            <div class="subtle">Live Call</div>
           </div>
 
-          <div class="livebox">
-            <video id="video" autoplay playsinline muted></video>
-            <audio id="audio" autoplay></audio>
-            <div class="placeholder" id="placeholder">Live ist aus. Über Geräte starten.</div>
-          </div>
+          <div class="live-stage">
+            <div class="livebox">
+              <video id="video" autoplay playsinline muted></video>
+              <audio id="audio" autoplay></audio>
+              <div class="placeholder" id="placeholder">Live ist aus. Tippe auf Verbinden.</div>
+            </div>
 
-          <div class="grid">
-            <button class="action" id="btnLive">Live starten</button>
-            <button class="action" id="btnRecord">Aufnahme starten</button>
-            <button class="action" id="btnTalk">Sprechen starten</button>
+            <div class="call-controls">
+              <button class="ctrl-round" id="btnMic" title="Mikrofon">🎤</button>
+              <button class="ctrl-round" id="btnAudioToggle" title="Ton">🔊</button>
+              <button class="ctrl-round danger" id="btnHangup" title="Auflegen">✕</button>
+            </div>
+
+            <div class="grid" style="margin-top:10px;">
+              <button class="action" id="btnLive">Verbinden</button>
+              <button class="action" id="btnRecord">Aufnahme</button>
+              <button class="action" id="btnTalk">Mikro aktivieren</button>
+            </div>
+
+            <button class="door-cta" id="btnUnlockBottom">Tür öffnen</button>
           </div>
         </section>
 
@@ -394,7 +425,13 @@ const audio = $('audio');
 const placeholder = $('placeholder');
 const statusEl = $('status');
 const btnLive = $('btnLive');
+const btnTalk = $('btnTalk');
 const ttsPlayer = $('ttsPlayer');
+const btnMic = $('btnMic');
+const btnAudioToggle = $('btnAudioToggle');
+const btnHangup = $('btnHangup');
+const btnUnlockBottom = $('btnUnlockBottom');
+let speakerMuted = false;
 
 const TILE_ACTIONS = [
   { id:'live', name:'Live Video', hint:'Kamera Stream starten/stoppen', mini:'STREAM', action: () => live ? stopLive() : startLive() },
@@ -469,6 +506,20 @@ function errText(e){
 }
 function setStatus(t){ statusEl.textContent = t; }
 function now(){ return new Date().toLocaleTimeString('de-DE'); }
+
+function syncCallButtons(){
+  if (btnLive) btnLive.textContent = live ? 'Auflegen' : 'Verbinden';
+  if (btnHangup) btnHangup.classList.toggle('active', live);
+  if (btnMic) {
+    btnMic.textContent = talking ? '🎙' : '🎤';
+    btnMic.classList.toggle('active', talking);
+  }
+  if (btnAudioToggle) {
+    btnAudioToggle.textContent = speakerMuted ? '🔇' : '🔊';
+    btnAudioToggle.classList.toggle('active', !speakerMuted);
+  }
+  if (btnTalk) btnTalk.textContent = talking ? 'Mikro aktiv' : 'Mikro aktivieren';
+}
 
 function eventTag(type){
   if (type === 'ding') return 'DING';
@@ -675,7 +726,7 @@ async function renegotiate(){
 async function startLive(){
   if (live) return;
   live = true;
-  btnLive.textContent = 'Live stoppen';
+  syncCallButtons();
   setStatus('Live verbindet...');
   placeholder.style.display = 'none';
 
@@ -690,6 +741,7 @@ async function startLive(){
     };
     await renegotiate();
     setStatus('Live aktiv');
+    syncCallButtons();
     addEvent('log', 'Live gestartet');
   } catch (e) {
     addEvent('log', `Live Fehler: ${errText(e)}`);
@@ -704,7 +756,7 @@ async function disableTalk(silent=false){
   micStream = null;
   const wasTalking = talking;
   talking = false;
-  $('btnTalk').textContent = 'Sprechen starten';
+  syncCallButtons();
 
   if (wasTalking && pc) {
     try { await renegotiate(); } catch {}
@@ -723,7 +775,7 @@ async function enableTalk(){
     micSender = pc.addTrack(micStream.getAudioTracks()[0], micStream);
     await renegotiate();
     talking = true;
-    $('btnTalk').textContent = 'Sprechen stoppen';
+    syncCallButtons();
     addEvent('log', 'Mikrofon aktiv');
   } catch (e) {
     await disableTalk(true);
@@ -734,7 +786,7 @@ async function enableTalk(){
 function stopLive(silent=false){
   disableTalk(true);
   live = false;
-  btnLive.textContent = 'Live starten';
+  syncCallButtons();
   if (pc) { try { pc.close(); } catch {} }
   pc = null;
   video.srcObject = null;
@@ -742,6 +794,13 @@ function stopLive(silent=false){
   placeholder.style.display = 'grid';
   setStatus('Live aus');
   if (!silent) addEvent('log', 'Live gestoppt');
+}
+
+async function toggleSpeaker(){
+  speakerMuted = !speakerMuted;
+  audio.muted = speakerMuted;
+  syncCallButtons();
+  addEvent('log', speakerMuted ? 'Ton aus' : 'Ton an');
 }
 
 async function unlock(){
@@ -961,6 +1020,10 @@ function bindAnnouncementActions(){
 btnLive.addEventListener('click', () => live ? stopLive() : startLive());
 $('btnRecord').addEventListener('click', manualRecord);
 $('btnTalk').addEventListener('click', async () => talking ? disableTalk() : enableTalk());
+btnMic?.addEventListener('click', async () => talking ? disableTalk() : enableTalk());
+btnAudioToggle?.addEventListener('click', toggleSpeaker);
+btnHangup?.addEventListener('click', () => stopLive());
+btnUnlockBottom?.addEventListener('click', unlock);
 $('btnTts').addEventListener('click', async () => { await speak(); await createAnnouncementFromTts(); });
 $('ttsText').addEventListener('keydown', (e) => { if (e.key === 'Enter') speak(); });
 $('btnRecStart').addEventListener('click', startRecording);
@@ -979,6 +1042,7 @@ bindSidebarNav();
 bindTileActions();
 bindAnnouncementActions();
 loadAuthStatus();
+syncCallButtons();
 loadCfg().then(loadSettings).then(loadAnnouncements).catch(e => addEvent('log', `Init Fehler: ${errText(e)}`));
 ensureServiceWorker().catch(() => {});
 connectEvents();
