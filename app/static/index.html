@@ -4,43 +4,38 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>RingDong Console</title>
+  <meta name="theme-color" content="#dbe7ff" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/icons/ringdong-icon.svg" />
   <style>
     :root {
-      --bg1: #dbe7ff;
-      --bg2: #bccfff;
-      --ink: #0f172a;
-      --muted: #5f6b84;
-      --line: rgba(255,255,255,.62);
-      --glass: linear-gradient(135deg, rgba(255,255,255,.58), rgba(255,255,255,.30));
-      --shadow: 0 18px 34px rgba(18,34,66,.16);
+      --bg1: #f3f6fb;
+      --bg2: #eaf0f8;
+      --ink: #111827;
+      --muted: #6b7280;
+      --accent: #0a84ff;
+      --accent-soft: rgba(10,132,255,.16);
+      --line: rgba(255,255,255,.74);
+      --glass: linear-gradient(135deg, rgba(255,255,255,.72), rgba(255,255,255,.45));
+      --shadow: 0 12px 28px rgba(15,23,42,.10);
       color-scheme: light;
     }
-
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       color: var(--ink);
       font-family: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background:
-        radial-gradient(1200px 800px at -10% -20%, #ffffff 0%, transparent 55%),
-        radial-gradient(1000px 700px at 110% -10%, #c7d8ff 0%, transparent 50%),
+        radial-gradient(1200px 800px at -10% -20%, rgba(255,255,255,.9) 0%, transparent 55%),
+        radial-gradient(1000px 700px at 110% -10%, rgba(10,132,255,.12) 0%, transparent 52%),
         linear-gradient(180deg, var(--bg1), var(--bg2));
       min-height: 100dvh;
     }
 
-    .shell {
-      max-width: 1160px;
-      margin: 0 auto;
-      padding: 14px;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 260px 1fr;
-      gap: 12px;
-      align-items: start;
-    }
+    .shell { max-width: 1240px; margin: 0 auto; padding: 14px; }
+    .layout { display: grid; grid-template-columns: 260px 1fr; gap: 12px; align-items: start; }
 
     .card {
       background: var(--glass);
@@ -51,232 +46,119 @@
       box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.72);
     }
 
-    .sidebar {
-      position: sticky;
-      top: 12px;
-      padding: 12px;
-    }
-
+    .sidebar { position: sticky; top: 12px; padding: 12px; }
     .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.65);
-      background: rgba(255,255,255,.48);
+      display: flex; align-items: center; gap: 10px; padding: 10px;
+      border-radius: 14px; border: 1px solid rgba(255,255,255,.65); background: rgba(255,255,255,.48);
       margin-bottom: 10px;
     }
-
     .brand .logo {
-      width: 26px;
-      height: 26px;
-      border-radius: 8px;
+      width: 28px; height: 28px; border-radius: 9px;
       background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.65));
       border: 1px solid rgba(255,255,255,.85);
       box-shadow: 0 4px 10px rgba(20,40,75,.18);
-      display: grid;
-      place-items: center;
-      font-size: 13px;
-      font-weight: 700;
+      display: grid; place-items: center; font-size: 12px; font-weight: 700;
     }
+    .brand .title { font-size: 14px; font-weight: 700; }
+    .brand .sub { font-size: 12px; color: var(--muted); }
 
-    .brand .meta {
-      display: grid;
-      gap: 1px;
-    }
-
-    .brand .meta .title { font-size: 14px; font-weight: 700; }
-    .brand .meta .sub { font-size: 12px; color: var(--muted); }
-
-    .nav {
-      display: grid;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
+    .nav { display: grid; gap: 8px; margin-bottom: 10px; }
     .nav-btn {
-      width: 100%;
-      min-height: 44px;
-      border-radius: 14px;
+      width: 100%; min-height: 44px; border-radius: 14px;
       border: 1px solid rgba(255,255,255,.74);
-      background: rgba(255,255,255,.56);
-      color: var(--ink);
-      padding: 9px 11px;
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      text-align: left;
-      font-size: 14px;
-      font-weight: 620;
-      cursor: pointer;
+      background: rgba(255,255,255,.56); color: var(--ink);
+      padding: 9px 11px; display: flex; align-items: center; gap: 9px;
+      text-align: left; font-size: 14px; font-weight: 620; cursor: pointer;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.86), 0 6px 10px rgba(16,28,52,.09);
       transition: transform .12s ease, background .2s ease;
     }
-
     .nav-btn:hover { transform: translateY(-1px); }
     .nav-btn.active {
-      background: rgba(255,255,255,.86);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 8px 14px rgba(35,60,110,.14);
+      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.78));
+      border-color: rgba(10,132,255,.45);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.96), 0 8px 14px rgba(10,132,255,.18);
     }
 
-    .icon {
-      width: 18px;
-      height: 18px;
-      stroke: #17233a;
-      stroke-width: 1.9;
-      fill: none;
-      flex: 0 0 auto;
-    }
+    .icon { width: 18px; height: 18px; stroke: #2a3548; stroke-width: 1.9; fill: none; flex: 0 0 auto; }
+    .nav-btn.active .icon { stroke: var(--accent); }
 
     .status-chip {
-      font-size: 12px;
-      color: var(--muted);
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.72);
-      background: rgba(255,255,255,.52);
-      display: inline-block;
-      width: 100%;
-      text-align: center;
+      font-size: 12px; color: var(--muted); padding: 7px 10px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.72); background: rgba(255,255,255,.52);
+      display: inline-block; width: 100%; text-align: center;
     }
 
-    .content {
-      display: grid;
-      gap: 12px;
-    }
-
-    .section {
-      scroll-margin-top: 16px;
-      padding: 12px;
-    }
-
-    .section-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .section-title {
-      font-size: 15px;
-      font-weight: 680;
-      letter-spacing: .2px;
-    }
-
-    .subtle {
-      font-size: 12px;
-      color: var(--muted);
-    }
+    .content { display: grid; gap: 12px; }
+    .section { scroll-margin-top: 16px; padding: 12px; }
+    .section-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .section-title { font-size: 15px; font-weight: 680; letter-spacing: .2px; }
+    .subtle { font-size: 12px; color: var(--muted); }
 
     .livebox {
-      border: 1px solid rgba(255,255,255,.64);
-      border-radius: 16px;
-      overflow: hidden;
-      background: #0c1220;
-      aspect-ratio: 16 / 9;
-      position: relative;
+      border: 1px solid rgba(255,255,255,.64); border-radius: 16px; overflow: hidden;
+      background: #0c1220; aspect-ratio: 16 / 9; position: relative;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.16);
     }
-
     video, audio { width: 100%; height: 100%; object-fit: contain; }
+    .placeholder { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #ccd7ee; font-size: 14px; padding: 14px; }
 
-    .placeholder {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      color: #ccd7ee;
-      font-size: 14px;
-      padding: 14px;
-    }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 10px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-top: 10px; }
+    .row { margin-top: 10px; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0,1fr));
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    button.action, input {
-      min-height: 44px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.78);
-      background: rgba(255,255,255,.62);
-      color: var(--ink);
-      padding: 9px 12px;
-      font-size: 14px;
+    button.action, input, select, textarea {
+      min-height: 44px; border-radius: 14px; border: 1px solid rgba(255,255,255,.78);
+      background: rgba(255,255,255,.62); color: var(--ink);
+      padding: 9px 12px; font-size: 14px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.86), 0 6px 10px rgba(16,28,52,.09);
     }
-
-    button.action {
-      cursor: pointer;
-      font-weight: 620;
-      transition: transform .12s ease, filter .2s ease;
-    }
-
-    button.action:hover { filter: brightness(1.03); }
+    textarea { min-height: 82px; resize: vertical; }
+    button.action { cursor: pointer; font-weight: 620; transition: transform .12s ease, filter .2s ease; }
+    button.action:hover { filter: brightness(1.03); border-color: rgba(10,132,255,.45); }
     button.action:active { transform: scale(.98); }
-
-    .row {
-      margin-top: 10px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
+    button.action.primary,
+    #btnLive,
+    #btnLive2,
+    #btnSaveSettings,
+    #btnEnablePush {
+      background: linear-gradient(180deg, rgba(10,132,255,.20), rgba(10,132,255,.10)), rgba(255,255,255,.72);
+      border-color: rgba(10,132,255,.42);
     }
+
+    .field { display: grid; gap: 6px; }
+    .field label { font-size: 12px; color: var(--muted); }
 
     .events-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+      color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px;
     }
-
-    .events {
-      display: grid;
-      gap: 8px;
-      max-height: 45vh;
-      overflow: auto;
-    }
-
+    .events { display: grid; gap: 8px; max-height: 45vh; overflow: auto; }
     .event {
+      border: 1px solid rgba(255,255,255,.66); border-radius: 12px; padding: 9px 11px;
+      display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.56); font-size: 14px;
+    }
+    .event .tag {
+      min-width: 40px; text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .3px;
+      color: #1d4f8c; border-radius: 999px; border: 1px solid rgba(10,132,255,.36);
+      background: rgba(10,132,255,.10); padding: 4px 7px;
+    }
+    .event .time { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+    .announcement-item {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 8px;
+      align-items: center;
       border: 1px solid rgba(255,255,255,.66);
       border-radius: 12px;
-      padding: 9px 11px;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      align-items: center;
-      gap: 8px;
+      padding: 8px 10px;
       background: rgba(255,255,255,.56);
-      font-size: 14px;
+      margin-bottom: 8px;
     }
+    .announcement-item .meta { font-size: 12px; color: var(--muted); }
 
-    .event .tag {
-      min-width: 36px;
-      text-align: center;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .3px;
-      color: #30415f;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.86);
-      background: rgba(255,255,255,.78);
-      padding: 4px 7px;
-    }
-
-    .event .time {
-      color: var(--muted);
-      font-size: 12px;
-      white-space: nowrap;
-    }
-
-    a { color: #265cb1; text-decoration: none; }
+    a { color: var(--accent); text-decoration: none; }
 
     @media (max-width: 980px) {
       .layout { grid-template-columns: 1fr; }
@@ -285,10 +167,10 @@
       .nav-btn { justify-content: center; }
       .nav-btn span.label { display: none; }
     }
-
     @media (max-width: 760px) {
-      .grid { grid-template-columns: 1fr 1fr; }
+      .grid, .grid-2 { grid-template-columns: 1fr 1fr; }
       .row { grid-template-columns: 1fr; }
+      .announcement-item { grid-template-columns: 1fr 1fr; }
       .nav { grid-template-columns: 1fr 1fr; }
       .nav-btn span.label { display: inline; }
     }
@@ -300,27 +182,27 @@
       <aside class="sidebar card">
         <div class="brand">
           <div class="logo">RD</div>
-          <div class="meta">
+          <div>
             <div class="title">RingDong</div>
             <div class="sub">Home Console</div>
           </div>
         </div>
 
         <nav class="nav" aria-label="Sidebar Navigation">
-          <button class="nav-btn active" data-target="section-live" id="navLive">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="3"></rect><path d="M9 9.5l6 2.5-6 2.5z"></path></svg>
-            <span class="label">Live Video</span>
+          <button class="nav-btn active" data-target="section-live">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="3"></rect><path d="M9 9.5l6 2.5-6 2.5z"></path></svg>
+            <span class="label">Live</span>
           </button>
-          <button class="nav-btn" data-target="section-devices" id="navDevices">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="8" height="8" rx="2"></rect><rect x="12" y="12.5" width="8" height="8" rx="2"></rect><path d="M12 7.5h4M8 11.5v4"></path></svg>
+          <button class="nav-btn" data-target="section-devices">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="3.5" width="8" height="8" rx="2"></rect><rect x="12" y="12.5" width="8" height="8" rx="2"></rect><path d="M12 7.5h4M8 11.5v4"></path></svg>
             <span class="label">Geräte</span>
           </button>
-          <button class="nav-btn" data-target="section-settings" id="navSettings">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1.4 1.4 0 1 1-2 2l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V19a1.4 1.4 0 1 1-2.8 0v-.1a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1.4 1.4 0 1 1-2-2l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H5a1.4 1.4 0 1 1 0-2.8h.1a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a1.4 1.4 0 1 1 2-2l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V5a1.4 1.4 0 1 1 2.8 0v.1a1 1 0 0 0 .6.9h.1a1 1 0 0 0 1.1-.2l.1-.1a1.4 1.4 0 1 1 2 2l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H19a1.4 1.4 0 1 1 0 2.8h-.1a1 1 0 0 0-.9.6z"></path></svg>
+          <button class="nav-btn" data-target="section-settings">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"></circle><path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1.4 1.4 0 1 1-2 2l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V19a1.4 1.4 0 1 1-2.8 0v-.1a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1.4 1.4 0 1 1-2-2l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H5a1.4 1.4 0 1 1 0-2.8h.1a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a1.4 1.4 0 1 1 2-2l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V5a1.4 1.4 0 1 1 2.8 0v.1a1 1 0 0 0 .6.9h.1a1 1 0 0 0 1.1-.2l.1-.1a1.4 1.4 0 1 1 2 2l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H19a1.4 1.4 0 1 1 0 2.8h-.1a1 1 0 0 0-.9.6z"></path></svg>
             <span class="label">Einstellungen</span>
           </button>
-          <button class="nav-btn" data-target="section-events" id="navEvents">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5v15"></path><path d="M5 8.5h14"></path><path d="M5 13.5h10"></path><path d="M5 18.5h8"></path></svg>
+          <button class="nav-btn" data-target="section-events">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M5 4.5v15"></path><path d="M5 8.5h14"></path><path d="M5 13.5h10"></path><path d="M5 18.5h8"></path></svg>
             <span class="label">Protokoll</span>
           </button>
         </nav>
@@ -331,14 +213,14 @@
       <section class="content">
         <section id="section-live" class="section card">
           <div class="section-head">
-            <div class="section-title">Live Video</div>
-            <div class="subtle">Ring Kamera</div>
+            <div class="section-title" id="titleLive">Live Video</div>
+            <div class="subtle">Kamera Stream</div>
           </div>
 
           <div class="livebox">
             <video id="video" autoplay playsinline muted></video>
             <audio id="audio" autoplay></audio>
-            <div class="placeholder" id="placeholder">Live ist aus. Starte den Stream über Geräte.</div>
+            <div class="placeholder" id="placeholder">Live ist aus. Über Geräte starten.</div>
           </div>
 
           <div class="grid">
@@ -350,8 +232,8 @@
 
         <section id="section-devices" class="section card">
           <div class="section-head">
-            <div class="section-title">Geräte</div>
-            <div class="subtle">Tür, Kamera & Intercom</div>
+            <div class="section-title" id="titleDevices">Geräte</div>
+            <div class="subtle">Tür, Kamera, Ansagen</div>
           </div>
 
           <div class="grid">
@@ -359,24 +241,104 @@
             <button class="action" id="btnRecord2">Aufnahme starten</button>
             <button class="action" id="btnLive2">Live öffnen</button>
           </div>
+
+          <div class="row">
+            <input id="ttsText" type="text" value="Hallo, ich bin gleich unten." placeholder="Ansage-Text" />
+            <button class="action" id="btnTts">TTS abspielen</button>
+          </div>
+
+          <div class="grid-2">
+            <button class="action" id="btnRecStart">Audio aufnehmen</button>
+            <button class="action" id="btnRecStop" disabled>Aufnahme stoppen</button>
+          </div>
+
+          <audio id="ttsPlayer" preload="none" controls style="width:100%; margin-top:10px;"></audio>
+
+          <div style="margin-top:12px;" class="subtle">Gespeicherte Ansagen</div>
+          <div id="announcementList" style="margin-top:8px;"></div>
         </section>
 
         <section id="section-settings" class="section card">
           <div class="section-head">
-            <div class="section-title">Einstellungen</div>
-            <div class="subtle">Audio / TTS</div>
+            <div class="section-title" id="titleSettings">Einstellungen</div>
+            <div class="subtle">Dashboard bearbeiten</div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label>Stream-ID</label>
+              <input id="setStream" />
+            </div>
+            <div class="field">
+              <label>go2rtc URL</label>
+              <input id="setGo2rtc" />
+            </div>
+            <div class="field">
+              <label>RTSP URL</label>
+              <input id="setRtsp" />
+            </div>
+            <div class="field">
+              <label>Record Dauer (Sek.)</label>
+              <input id="setRecordDuration" type="number" min="3" max="120" />
+            </div>
+            <div class="field">
+              <label>Record Cooldown (Sek.)</label>
+              <input id="setRecordCooldown" type="number" min="0" max="300" />
+            </div>
+            <div class="field">
+              <label>TTS Stimme</label>
+              <input id="setTtsVoice" />
+            </div>
+            <div class="field">
+              <label>TTS Rate (z.B. +0%)</label>
+              <input id="setTtsRate" />
+            </div>
+            <div class="field">
+              <label>Aufnahme bei Klingeln</label>
+              <select id="setRecordOnDing"><option value="true">Aktiv</option><option value="false">Aus</option></select>
+            </div>
+            <div class="field">
+              <label>Aufnahme bei Bewegung</label>
+              <select id="setRecordOnMotion"><option value="true">Aktiv</option><option value="false">Aus</option></select>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;" class="subtle">Sektionstitel (Dashboard)</div>
+          <div class="grid-2">
+            <div class="field"><label>Live</label><input id="setTitleLive" /></div>
+            <div class="field"><label>Geräte</label><input id="setTitleDevices" /></div>
+            <div class="field"><label>Einstellungen</label><input id="setTitleSettings" /></div>
+            <div class="field"><label>Protokoll</label><input id="setTitleEvents" /></div>
+          </div>
+
+          <div style="margin-top:12px;" class="subtle">Push & App (iPhone)</div>
+          <div class="grid-2">
+            <button class="action" id="btnEnablePush">Push aktivieren</button>
+            <button class="action" id="btnTestPush">Test Push senden</button>
+          </div>
+          <div class="subtle" id="pushHint" style="margin-top:8px;">
+            Für iPhone: Safari → Teilen → "Zum Home-Bildschirm". Push läuft nur mit installierter Web-App und HTTPS.
+          </div>
+
+          <div style="margin-top:12px;" class="subtle">Benutzer</div>
+          <div class="grid-2">
+            <div class="field"><label>Neuer User</label><input id="newUser" placeholder="z.B. dustin" /></div>
+            <div class="field"><label>Passwort</label><input id="newPass" type="password" placeholder="mind. 8 Zeichen" /></div>
+          </div>
+          <div class="row">
+            <button class="action" id="btnCreateUser">User anlegen</button>
+            <button class="action" id="btnLogout">Abmelden</button>
           </div>
 
           <div class="row">
-            <input id="ttsText" type="text" value="Hallo, ich bin gleich unten." placeholder="Text für Ansage" />
-            <button class="action" id="btnTts">TTS abspielen</button>
+            <button class="action" id="btnReloadSettings">Neu laden</button>
+            <button class="action" id="btnSaveSettings">Einstellungen speichern</button>
           </div>
-          <audio id="ttsPlayer" preload="none" style="display:none"></audio>
         </section>
 
         <section id="section-events" class="section card">
           <div class="events-head">
-            <span>Protokoll</span>
+            <span id="titleEvents">Protokoll</span>
             <span><a href="/recordings" target="_blank" rel="noopener">Alle Aufnahmen</a></span>
           </div>
           <div id="eventList" class="events"></div>
@@ -387,11 +349,17 @@
 
 <script>
 let cfg = { stream: '343ea4dd1515_live' };
+let settings = {};
 let pc = null;
 let live = false;
 let talking = false;
 let micStream = null;
 let micSender = null;
+
+let recorder = null;
+let recChunks = [];
+let swReg = null;
+let pushPublicKey = '';
 
 const $ = (id) => document.getElementById(id);
 const video = $('video');
@@ -411,17 +379,8 @@ function errText(e){
     return String(e || 'unbekannter Fehler');
   }
 }
-
 function setStatus(t){ statusEl.textContent = t; }
 function now(){ return new Date().toLocaleTimeString('de-DE'); }
-
-function cleanLabel(label){
-  try {
-    return String(label || '').replace(/[\u{1F300}-\u{1FAFF}]/gu, '').replace(/\s+/g,' ').trim();
-  } catch {
-    return String(label || '');
-  }
-}
 
 function eventTag(type){
   if (type === 'ding') return 'DING';
@@ -431,19 +390,180 @@ function eventTag(type){
   return 'LOG';
 }
 
+function cleanLabel(label){
+  return String(label || '').replace(/[\u{1F300}-\u{1FAFF}]/gu, '').replace(/\s+/g,' ').trim();
+}
+
 function addEvent(type, label, time, url){
   const row = document.createElement('div');
   row.className = 'event';
-  const txt = cleanLabel(label);
-  row.innerHTML = `<span class="tag">${eventTag(type)}</span><span>${txt}${url ? ` <a href="${url}" target="_blank" rel="noopener">Öffnen</a>` : ''}</span><span class="time">${time || now()}</span>`;
+  row.innerHTML = `<span class="tag">${eventTag(type)}</span><span>${cleanLabel(label)}${url ? ` <a href="${url}" target="_blank" rel="noopener">Öffnen</a>` : ''}</span><span class="time">${time || now()}</span>`;
   $('eventList').prepend(row);
-  while ($('eventList').children.length > 80) $('eventList').removeChild($('eventList').lastChild);
+  while ($('eventList').children.length > 100) $('eventList').removeChild($('eventList').lastChild);
+}
+
+async function api(url, opts = {}){
+  const r = await fetch(url, opts);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || j.detail || `HTTP ${r.status}`);
+  return j;
+}
+
+function b64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+async function ensureServiceWorker(){
+  if (!('serviceWorker' in navigator)) throw new Error('Service Worker wird nicht unterstützt');
+  if (!swReg) swReg = await navigator.serviceWorker.register('/sw.js');
+  return swReg;
+}
+
+async function loadAuthStatus(){
+  try {
+    const st = await api('/api/auth/status');
+    if (st.authenticated && st.user) {
+      setStatus(`Angemeldet: ${st.user}`);
+    }
+  } catch {}
+}
+
+async function createUser(){
+  const username = $('newUser').value.trim();
+  const password = $('newPass').value;
+  if (!username || password.length < 8) {
+    addEvent('log', 'User-Anlage: Username + Passwort (mind. 8) erforderlich');
+    return;
+  }
+  try {
+    const j = await api('/api/auth/users', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, password, role:'user' }) });
+    addEvent('log', `User angelegt: ${j.user}`);
+    $('newUser').value = '';
+    $('newPass').value = '';
+  } catch (e) {
+    addEvent('log', `User Fehler: ${errText(e)}`);
+  }
+}
+
+async function logout(){
+  try {
+    await api('/api/auth/logout', { method:'POST' });
+  } catch {}
+  window.location.href = '/login';
+}
+
+async function enablePush(){
+  try {
+    await ensureServiceWorker();
+    const keyResp = await api('/api/push/public_key');
+    pushPublicKey = keyResp.public_key || '';
+    if (!pushPublicKey) throw new Error('kein VAPID public key');
+
+    if (!('PushManager' in window)) throw new Error('PushManager nicht unterstützt');
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') throw new Error('Push-Berechtigung nicht erteilt');
+
+    const reg = await ensureServiceWorker();
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: b64ToUint8Array(pushPublicKey),
+      });
+    }
+
+    await api('/api/push/subscribe', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ subscription: sub.toJSON() })
+    });
+
+    $('pushHint').textContent = 'Push aktiv. iPhone: als Home-Screen-App öffnen.';
+    addEvent('log', 'Push aktiviert');
+  } catch (e) {
+    addEvent('log', `Push Fehler: ${errText(e)}`);
+  }
+}
+
+async function testPush(){
+  try {
+    const j = await api('/api/push/test', { method:'POST' });
+    addEvent('log', `Push Test gesendet (sent=${j.sent || 0})`);
+  } catch (e) {
+    addEvent('log', `Push Test Fehler: ${errText(e)}`);
+  }
+}
+
+function applyTitles(){
+  const db = settings.dashboard || {};
+  $('titleLive').textContent = db.live_title || 'Live Video';
+  $('titleDevices').textContent = db.devices_title || 'Geräte';
+  $('titleSettings').textContent = db.settings_title || 'Einstellungen';
+  $('titleEvents').textContent = db.events_title || 'Protokoll';
+}
+
+function fillSettingsForm(){
+  $('setStream').value = settings.stream || '';
+  $('setGo2rtc').value = settings.go2rtc_url || '';
+  $('setRtsp').value = settings.rtsp_stream_url || '';
+  $('setRecordDuration').value = settings.record_duration_sec || 25;
+  $('setRecordCooldown').value = settings.record_cooldown_sec || 20;
+  $('setTtsVoice').value = settings.tts_voice || '';
+  $('setTtsRate').value = settings.tts_rate || '+0%';
+  $('setRecordOnDing').value = String(!!settings.record_on_ding);
+  $('setRecordOnMotion').value = String(!!settings.record_on_motion);
+
+  const db = settings.dashboard || {};
+  $('setTitleLive').value = db.live_title || 'Live Video';
+  $('setTitleDevices').value = db.devices_title || 'Geräte';
+  $('setTitleSettings').value = db.settings_title || 'Einstellungen';
+  $('setTitleEvents').value = db.events_title || 'Protokoll';
+}
+
+function readSettingsForm(){
+  return {
+    stream: $('setStream').value.trim(),
+    go2rtc_url: $('setGo2rtc').value.trim(),
+    rtsp_stream_url: $('setRtsp').value.trim(),
+    record_duration_sec: Number($('setRecordDuration').value || 25),
+    record_cooldown_sec: Number($('setRecordCooldown').value || 20),
+    tts_voice: $('setTtsVoice').value.trim(),
+    tts_rate: $('setTtsRate').value.trim(),
+    record_on_ding: $('setRecordOnDing').value === 'true',
+    record_on_motion: $('setRecordOnMotion').value === 'true',
+    dashboard: {
+      live_title: $('setTitleLive').value.trim(),
+      devices_title: $('setTitleDevices').value.trim(),
+      settings_title: $('setTitleSettings').value.trim(),
+      events_title: $('setTitleEvents').value.trim(),
+    }
+  };
+}
+
+async function loadSettings(){
+  settings = await api('/api/settings');
+  fillSettingsForm();
+  applyTitles();
+}
+
+async function saveSettings(){
+  const payload = readSettingsForm();
+  const j = await api('/api/settings', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+  settings = j.settings || payload;
+  cfg.stream = settings.stream || cfg.stream;
+  applyTitles();
+  addEvent('log', 'Einstellungen gespeichert');
 }
 
 async function loadCfg(){
   try {
-    const r = await fetch('/api/config');
-    cfg = await r.json();
+    const r = await api('/api/config');
+    cfg = r;
   } catch (e) {
     addEvent('log', `Config-Fehler: ${errText(e)}`);
   }
@@ -452,13 +572,10 @@ async function loadCfg(){
 async function renegotiate(){
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
-  const resp = await fetch('/api/live/offer', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: 'offer', sdp: offer.sdp, stream: cfg.stream })
+  const payload = await api('/api/live/offer', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ type: 'offer', sdp: offer.sdp, stream: settings.stream || cfg.stream })
   });
-  const payload = await resp.json();
-  if (!resp.ok || !payload.ok) throw new Error(payload.error || payload.detail || 'live proxy failed');
   await pc.setRemoteDescription(payload.answer);
 }
 
@@ -474,13 +591,11 @@ async function startLive(){
     pc = new RTCPeerConnection({ iceServers:[{ urls: 'stun:stun.l.google.com:19302' }] });
     pc.addTransceiver('video', { direction: 'recvonly' });
     pc.addTransceiver('audio', { direction: 'recvonly' });
-
     pc.ontrack = (e) => {
       const stream = e.streams[0];
       if (e.track.kind === 'video') video.srcObject = stream;
       if (e.track.kind === 'audio') audio.srcObject = stream;
     };
-
     await renegotiate();
     setStatus('Live aktiv');
     addEvent('log', 'Live gestartet');
@@ -491,12 +606,8 @@ async function startLive(){
 }
 
 async function disableTalk(silent=false){
-  if (micSender && pc) {
-    try { pc.removeTrack(micSender); } catch {}
-  }
-  if (micStream) {
-    micStream.getTracks().forEach(t => t.stop());
-  }
+  if (micSender && pc) { try { pc.removeTrack(micSender); } catch {} }
+  if (micStream) micStream.getTracks().forEach(t => t.stop());
   micSender = null;
   micStream = null;
   const wasTalking = talking;
@@ -510,28 +621,14 @@ async function disableTalk(silent=false){
 }
 
 async function enableTalk(){
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    addEvent('log', 'Sprechen nicht verfügbar: Mikrofon blockiert');
-    return;
-  }
+  if (!navigator.mediaDevices?.getUserMedia) return addEvent('log', 'Mikrofon nicht verfügbar');
   if (!live) await startLive();
-  if (!pc) {
-    addEvent('log', 'Sprechen nicht verfügbar: Live nicht aktiv');
-    return;
-  }
+  if (!pc) return addEvent('log', 'Live nicht aktiv');
   if (talking) return;
 
   try {
-    micStream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-        channelCount: 1,
-      }
-    });
-    const micTrack = micStream.getAudioTracks()[0];
-    micSender = pc.addTrack(micTrack, micStream);
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true, autoGainControl:true, channelCount:1 } });
+    micSender = pc.addTrack(micStream.getAudioTracks()[0], micStream);
     await renegotiate();
     talking = true;
     $('btnTalk').textContent = 'Sprechen stoppen';
@@ -558,9 +655,7 @@ function stopLive(silent=false){
 
 async function unlock(){
   try {
-    const r = await fetch('/api/unlock', { method:'POST' });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.ok) throw new Error(j.error || 'unlock failed');
+    await api('/api/unlock', { method:'POST' });
     addEvent('unlock', 'Tür öffnen gesendet');
   } catch (e) {
     addEvent('log', `Unlock Fehler: ${errText(e)}`);
@@ -569,37 +664,19 @@ async function unlock(){
 
 async function manualRecord(){
   try {
-    const r = await fetch('/api/record', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ source:'manual' })
-    });
-    const j = await r.json();
-    if (j.ok && j.cooldown) {
-      addEvent('log', `${j.info} – nutze letzte Aufnahme`, undefined, j.url || '/video/latest.mp4');
-    } else if (j.ok) {
-      addEvent('clip', `Aufnahme bereit: ${j.info}`, undefined, `/video/${j.info}`);
-    } else {
-      addEvent('log', `Aufnahme fehlgeschlagen: ${j.info || 'unknown'}`);
-    }
+    const j = await api('/api/record', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ source:'manual' }) });
+    if (j.cooldown) addEvent('log', `${j.info} – nutze letzte Aufnahme`, undefined, j.url || '/video/latest.mp4');
+    else addEvent('clip', `Aufnahme bereit: ${j.info}`, undefined, `/video/${j.info}`);
   } catch (e) {
-    addEvent('log', `Aufnahme API Fehler: ${errText(e)}`);
+    addEvent('log', `Aufnahme Fehler: ${errText(e)}`);
   }
 }
 
 async function speak(){
   const text = $('ttsText').value.trim();
   if (!text) return;
-
   try {
-    const r = await fetch('/api/tts', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ text })
-    });
-    const j = await r.json();
-    if (!r.ok || !j.ok || !j.url) throw new Error(j.error || 'tts backend failed');
-
+    const j = await api('/api/tts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
     ttsPlayer.src = `${j.url}?t=${Date.now()}`;
     await ttsPlayer.play();
     addEvent('log', 'TTS abgespielt', undefined, j.url);
@@ -608,26 +685,107 @@ async function speak(){
   }
 }
 
-async function toggleTalk(){
-  if (talking) {
-    await disableTalk();
-  } else {
-    await enableTalk();
+async function loadAnnouncements(){
+  const list = $('announcementList');
+  list.innerHTML = '';
+  try {
+    const j = await api('/api/announcements');
+    const items = j.items || [];
+    if (!items.length) {
+      list.innerHTML = '<div class="subtle">Keine Ansagen gespeichert.</div>';
+      return;
+    }
+    for (const item of items) {
+      const row = document.createElement('div');
+      row.className = 'announcement-item';
+      const dt = new Date((item.mtime || 0) * 1000);
+      row.innerHTML = `
+        <div>
+          <div>${item.name}</div>
+          <div class="meta">${dt.toLocaleString('de-DE')} • ${(item.size/1024).toFixed(1)} KB</div>
+        </div>
+        <button class="action" data-play="${item.name}">Play</button>
+        <button class="action" data-use="${item.name}">Nutzen</button>
+        <button class="action" data-del="${item.name}">Löschen</button>
+      `;
+      list.appendChild(row);
+    }
+  } catch (e) {
+    list.innerHTML = `<div class="subtle">Fehler: ${errText(e)}</div>`;
   }
 }
 
-function activateNav(targetId){
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.querySelector(`.nav-btn[data-target="${targetId}"]`);
-  if (btn) btn.classList.add('active');
-  const sec = document.getElementById(targetId);
-  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+async function playAnnouncement(name){
+  try {
+    const j = await api('/api/announcements/play', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name}) });
+    ttsPlayer.src = `${j.url}?t=${Date.now()}`;
+    await ttsPlayer.play();
+    addEvent('log', `Ansage abgespielt: ${name}`, undefined, j.url);
+  } catch (e) {
+    addEvent('log', `Play Fehler: ${errText(e)}`);
+  }
 }
 
-function bindSidebarNav(){
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => activateNav(btn.dataset.target));
-  });
+async function deleteAnnouncement(name){
+  try {
+    await api(`/api/announcements/${encodeURIComponent(name)}`, { method:'DELETE' });
+    addEvent('log', `Ansage gelöscht: ${name}`);
+    await loadAnnouncements();
+  } catch (e) {
+    addEvent('log', `Löschen Fehler: ${errText(e)}`);
+  }
+}
+
+async function createAnnouncementFromTts(){
+  const text = $('ttsText').value.trim();
+  if (!text) return;
+  try {
+    const j = await api('/api/announcements/tts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+    addEvent('log', 'Ansage per TTS erstellt', undefined, j.url);
+    await loadAnnouncements();
+  } catch (e) {
+    addEvent('log', `Ansage-TTS Fehler: ${errText(e)}`);
+  }
+}
+
+async function startRecording(){
+  if (!navigator.mediaDevices?.getUserMedia) return addEvent('log', 'Audioaufnahme nicht verfügbar');
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    recChunks = [];
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = (e) => { if (e.data?.size) recChunks.push(e.data); };
+    recorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(recChunks, {type: recorder.mimeType || 'audio/webm'});
+      const ext = (blob.type.includes('ogg') ? 'ogg' : blob.type.includes('wav') ? 'wav' : blob.type.includes('mp4') ? 'm4a' : 'webm');
+      const fd = new FormData();
+      fd.append('audio', blob, `announcement.${ext}`);
+      try {
+        const r = await fetch('/api/announcements/upload', { method:'POST', body: fd });
+        const j = await r.json();
+        if (!r.ok || !j.ok) throw new Error(j.error || 'upload failed');
+        addEvent('log', 'Ansage aufgenommen und gespeichert', undefined, j.url);
+        await loadAnnouncements();
+      } catch (e) {
+        addEvent('log', `Upload Fehler: ${errText(e)}`);
+      }
+    };
+    recorder.start();
+    $('btnRecStart').disabled = true;
+    $('btnRecStop').disabled = false;
+    addEvent('log', 'Audioaufnahme läuft');
+  } catch (e) {
+    addEvent('log', `Aufnahme Start fehlgeschlagen: ${errText(e)}`);
+  }
+}
+
+function stopRecording(){
+  try {
+    if (recorder && recorder.state !== 'inactive') recorder.stop();
+  } catch {}
+  $('btnRecStart').disabled = false;
+  $('btnRecStop').disabled = true;
 }
 
 function connectEvents(){
@@ -644,20 +802,58 @@ function connectEvents(){
   es.onerror = () => setStatus('Events reconnect...');
 }
 
+function bindSidebarNav(){
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const sec = document.getElementById(btn.dataset.target);
+      if (sec) sec.scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+  });
+}
+
+function bindAnnouncementActions(){
+  $('announcementList').addEventListener('click', async (e) => {
+    const el = e.target.closest('button');
+    if (!el) return;
+    const play = el.dataset.play;
+    const use = el.dataset.use;
+    const del = el.dataset.del;
+    if (play) await playAnnouncement(play);
+    if (use) {
+      $('ttsText').value = `Ansage aus Datei: ${use}`;
+      await playAnnouncement(use);
+    }
+    if (del) await deleteAnnouncement(del);
+  });
+}
+
 btnLive.addEventListener('click', () => live ? stopLive() : startLive());
 $('btnLive2').addEventListener('click', () => live ? stopLive() : startLive());
 $('btnUnlock').addEventListener('click', unlock);
 $('btnRecord').addEventListener('click', manualRecord);
 $('btnRecord2').addEventListener('click', manualRecord);
-$('btnTalk').addEventListener('click', toggleTalk);
-$('btnTts').addEventListener('click', speak);
+$('btnTalk').addEventListener('click', async () => talking ? disableTalk() : enableTalk());
+$('btnTts').addEventListener('click', async () => { await speak(); await createAnnouncementFromTts(); });
 $('ttsText').addEventListener('keydown', (e) => { if (e.key === 'Enter') speak(); });
+$('btnRecStart').addEventListener('click', startRecording);
+$('btnRecStop').addEventListener('click', stopRecording);
+$('btnReloadSettings').addEventListener('click', loadSettings);
+$('btnSaveSettings').addEventListener('click', saveSettings);
+$('btnEnablePush').addEventListener('click', enablePush);
+$('btnTestPush').addEventListener('click', testPush);
+$('btnCreateUser').addEventListener('click', createUser);
+$('btnLogout').addEventListener('click', logout);
 
-document.addEventListener('visibilitychange', () => { if (document.hidden && live) stopLive(true); });
 window.addEventListener('pagehide', () => { if (live) stopLive(true); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && live) stopLive(true); });
 
 bindSidebarNav();
-loadCfg();
+bindAnnouncementActions();
+loadAuthStatus();
+loadCfg().then(loadSettings).then(loadAnnouncements).catch(e => addEvent('log', `Init Fehler: ${errText(e)}`));
+ensureServiceWorker().catch(() => {});
 connectEvents();
 addEvent('log', 'UI geladen');
 </script>
