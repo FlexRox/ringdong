@@ -3,121 +3,386 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Doorbell</title>
+  <title>RingDong Console</title>
   <style>
     :root {
-      --bg1: #d9e6ff;
-      --bg2: #b7cfff;
-      --ink: #0f1a2f;
-      --muted: #5c6b84;
-      --glass: rgba(255,255,255,.42);
-      --line: rgba(255,255,255,.55);
-      --shadow: 0 18px 34px rgba(18,34,66,.18);
+      --bg1: #dbe7ff;
+      --bg2: #bccfff;
+      --ink: #0f172a;
+      --muted: #5f6b84;
+      --line: rgba(255,255,255,.62);
+      --glass: linear-gradient(135deg, rgba(255,255,255,.58), rgba(255,255,255,.30));
+      --shadow: 0 18px 34px rgba(18,34,66,.16);
       color-scheme: light;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       color: var(--ink);
       font-family: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background:
         radial-gradient(1200px 800px at -10% -20%, #ffffff 0%, transparent 55%),
-        radial-gradient(1000px 700px at 110% -10%, #c8d9ff 0%, transparent 50%),
+        radial-gradient(1000px 700px at 110% -10%, #c7d8ff 0%, transparent 50%),
         linear-gradient(180deg, var(--bg1), var(--bg2));
       min-height: 100dvh;
     }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 14px; display: grid; gap: 12px; }
+
+    .shell {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 14px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
     .card {
-      background: linear-gradient(135deg, rgba(255,255,255,.58), rgba(255,255,255,.30));
+      background: var(--glass);
       border: 1px solid var(--line);
       border-radius: 20px;
-      padding: 12px;
       backdrop-filter: blur(18px) saturate(150%);
       -webkit-backdrop-filter: blur(18px) saturate(150%);
-      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.75);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.72);
     }
-    .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .title { font-weight: 700; letter-spacing: .2px; }
-    .status {
-      font-size: 12px; color: var(--muted);
-      padding: 6px 10px; border-radius: 999px;
-      background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.7);
+
+    .sidebar {
+      position: sticky;
+      top: 12px;
+      padding: 12px;
     }
-    .livebox {
-      margin-top: 10px; border: 1px solid rgba(255,255,255,.65); border-radius: 16px;
-      overflow: hidden; background: #0b1020; aspect-ratio: 16 / 9; position: relative;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.65);
+      background: rgba(255,255,255,.48);
+      margin-bottom: 10px;
     }
-    video, audio { width: 100%; height: 100%; object-fit: contain; }
-    .placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #c8d3ea; font-size: 14px; text-align: center; padding: 14px; }
-    .grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-top: 10px; }
-    button, input {
+
+    .brand .logo {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.65));
+      border: 1px solid rgba(255,255,255,.85);
+      box-shadow: 0 4px 10px rgba(20,40,75,.18);
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .brand .meta {
+      display: grid;
+      gap: 1px;
+    }
+
+    .brand .meta .title { font-size: 14px; font-weight: 700; }
+    .brand .meta .sub { font-size: 12px; color: var(--muted); }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .nav-btn {
+      width: 100%;
       min-height: 44px;
       border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.74);
+      background: rgba(255,255,255,.56);
+      color: var(--ink);
+      padding: 9px 11px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 620;
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.86), 0 6px 10px rgba(16,28,52,.09);
+      transition: transform .12s ease, background .2s ease;
+    }
+
+    .nav-btn:hover { transform: translateY(-1px); }
+    .nav-btn.active {
+      background: rgba(255,255,255,.86);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 8px 14px rgba(35,60,110,.14);
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      stroke: #17233a;
+      stroke-width: 1.9;
+      fill: none;
+      flex: 0 0 auto;
+    }
+
+    .status-chip {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 7px 10px;
+      border-radius: 999px;
       border: 1px solid rgba(255,255,255,.72);
+      background: rgba(255,255,255,.52);
+      display: inline-block;
+      width: 100%;
+      text-align: center;
+    }
+
+    .content {
+      display: grid;
+      gap: 12px;
+    }
+
+    .section {
+      scroll-margin-top: 16px;
+      padding: 12px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 680;
+      letter-spacing: .2px;
+    }
+
+    .subtle {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .livebox {
+      border: 1px solid rgba(255,255,255,.64);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #0c1220;
+      aspect-ratio: 16 / 9;
+      position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.16);
+    }
+
+    video, audio { width: 100%; height: 100%; object-fit: contain; }
+
+    .placeholder {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #ccd7ee;
+      font-size: 14px;
+      padding: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button.action, input {
+      min-height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.78);
       background: rgba(255,255,255,.62);
-      color: #0f1a2f;
+      color: var(--ink);
       padding: 9px 12px;
       font-size: 14px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.78), 0 6px 12px rgba(16,28,52,.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.86), 0 6px 10px rgba(16,28,52,.09);
     }
-    button { cursor: pointer; font-weight: 650; transition: transform .14s ease, filter .2s ease; }
-    button:hover { filter: brightness(1.03); }
-    button:active { transform: scale(.98); }
-    button.primary, button.ok, button.warn, button.danger {
-      background: linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.58));
-      border-color: rgba(255,255,255,.84);
+
+    button.action {
+      cursor: pointer;
+      font-weight: 620;
+      transition: transform .12s ease, filter .2s ease;
     }
-    button.primary { box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 8px 14px rgba(57,92,158,.14); }
-    button.ok, button.warn, button.danger { box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 6px 10px rgba(16,28,52,.10); }
-    .row { margin-top: 10px; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
-    .events-head { display:flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
-    .events { display: grid; gap: 8px; max-height: 45vh; overflow: auto; }
+
+    button.action:hover { filter: brightness(1.03); }
+    button.action:active { transform: scale(.98); }
+
+    .row {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    .events-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .events {
+      display: grid;
+      gap: 8px;
+      max-height: 45vh;
+      overflow: auto;
+    }
+
     .event {
-      border: 1px solid rgba(255,255,255,.65); border-radius: 12px; padding: 9px 11px;
-      display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px;
-      background: rgba(255,255,255,.56); font-size: 14px;
+      border: 1px solid rgba(255,255,255,.66);
+      border-radius: 12px;
+      padding: 9px 11px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.56);
+      font-size: 14px;
     }
-    .time { color: var(--muted); font-size: 12px; }
-    a { color: #245eb8; text-decoration: none; }
+
+    .event .tag {
+      min-width: 36px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      color: #30415f;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.86);
+      background: rgba(255,255,255,.78);
+      padding: 4px 7px;
+    }
+
+    .event .time {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    a { color: #265cb1; text-decoration: none; }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+      .nav { grid-template-columns: repeat(4, minmax(0,1fr)); }
+      .nav-btn { justify-content: center; }
+      .nav-btn span.label { display: none; }
+    }
+
     @media (max-width: 760px) {
       .grid { grid-template-columns: 1fr 1fr; }
       .row { grid-template-columns: 1fr; }
+      .nav { grid-template-columns: 1fr 1fr; }
+      .nav-btn span.label { display: inline; }
     }
   </style>
 </head>
 <body>
-  <main class="wrap">
-    <section class="card">
-      <div class="head">
-        <div class="title">🔔 Doorbell Console</div>
-        <div class="status" id="status">Bereit</div>
-      </div>
-      <div class="livebox">
-        <video id="video" autoplay playsinline muted></video>
-        <audio id="audio" autoplay></audio>
-        <div class="placeholder" id="placeholder">Live ist aus. Klick auf „Live starten“.</div>
-      </div>
-      <div class="grid">
-        <button id="btnLive" class="primary">📺 Live starten</button>
-        <button id="btnUnlock" class="ok">🔓 Tür öffnen</button>
-        <button id="btnRecord" class="danger">⏺ Aufnahme</button>
-        <button id="btnTalk" class="warn">🎤 Sprechen starten</button>
-      </div>
-      <div class="row">
-        <input id="ttsText" type="text" value="Hallo, ich bin gleich unten." placeholder="Text für Tür-Ansage" />
-        <button id="btnTts" class="warn">🔊 TTS (Tür)</button>
-      </div>
-      <audio id="ttsPlayer" preload="none" style="display:none"></audio>
-    </section>
+  <main class="shell">
+    <div class="layout">
+      <aside class="sidebar card">
+        <div class="brand">
+          <div class="logo">RD</div>
+          <div class="meta">
+            <div class="title">RingDong</div>
+            <div class="sub">Home Console</div>
+          </div>
+        </div>
 
-    <section class="card">
-      <div class="events-head">
-        <span>Ereignisse</span>
-        <span><a href="/recordings" target="_blank" rel="noopener">Alle Aufnahmen</a></span>
-      </div>
-      <div id="eventList" class="events"></div>
-    </section>
+        <nav class="nav" aria-label="Sidebar Navigation">
+          <button class="nav-btn active" data-target="section-live" id="navLive">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="3"></rect><path d="M9 9.5l6 2.5-6 2.5z"></path></svg>
+            <span class="label">Live Video</span>
+          </button>
+          <button class="nav-btn" data-target="section-devices" id="navDevices">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="8" height="8" rx="2"></rect><rect x="12" y="12.5" width="8" height="8" rx="2"></rect><path d="M12 7.5h4M8 11.5v4"></path></svg>
+            <span class="label">Geräte</span>
+          </button>
+          <button class="nav-btn" data-target="section-settings" id="navSettings">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"></circle><path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1.4 1.4 0 1 1-2 2l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V19a1.4 1.4 0 1 1-2.8 0v-.1a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1.4 1.4 0 1 1-2-2l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H5a1.4 1.4 0 1 1 0-2.8h.1a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1l-.1-.1a1.4 1.4 0 1 1 2-2l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V5a1.4 1.4 0 1 1 2.8 0v.1a1 1 0 0 0 .6.9h.1a1 1 0 0 0 1.1-.2l.1-.1a1.4 1.4 0 1 1 2 2l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H19a1.4 1.4 0 1 1 0 2.8h-.1a1 1 0 0 0-.9.6z"></path></svg>
+            <span class="label">Einstellungen</span>
+          </button>
+          <button class="nav-btn" data-target="section-events" id="navEvents">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5v15"></path><path d="M5 8.5h14"></path><path d="M5 13.5h10"></path><path d="M5 18.5h8"></path></svg>
+            <span class="label">Protokoll</span>
+          </button>
+        </nav>
+
+        <div class="status-chip" id="status">Bereit</div>
+      </aside>
+
+      <section class="content">
+        <section id="section-live" class="section card">
+          <div class="section-head">
+            <div class="section-title">Live Video</div>
+            <div class="subtle">Ring Kamera</div>
+          </div>
+
+          <div class="livebox">
+            <video id="video" autoplay playsinline muted></video>
+            <audio id="audio" autoplay></audio>
+            <div class="placeholder" id="placeholder">Live ist aus. Starte den Stream über Geräte.</div>
+          </div>
+
+          <div class="grid">
+            <button class="action" id="btnLive">Live starten</button>
+            <button class="action" id="btnRecord">Aufnahme starten</button>
+            <button class="action" id="btnTalk">Sprechen starten</button>
+          </div>
+        </section>
+
+        <section id="section-devices" class="section card">
+          <div class="section-head">
+            <div class="section-title">Geräte</div>
+            <div class="subtle">Tür, Kamera & Intercom</div>
+          </div>
+
+          <div class="grid">
+            <button class="action" id="btnUnlock">Tür öffnen</button>
+            <button class="action" id="btnRecord2">Aufnahme starten</button>
+            <button class="action" id="btnLive2">Live öffnen</button>
+          </div>
+        </section>
+
+        <section id="section-settings" class="section card">
+          <div class="section-head">
+            <div class="section-title">Einstellungen</div>
+            <div class="subtle">Audio / TTS</div>
+          </div>
+
+          <div class="row">
+            <input id="ttsText" type="text" value="Hallo, ich bin gleich unten." placeholder="Text für Ansage" />
+            <button class="action" id="btnTts">TTS abspielen</button>
+          </div>
+          <audio id="ttsPlayer" preload="none" style="display:none"></audio>
+        </section>
+
+        <section id="section-events" class="section card">
+          <div class="events-head">
+            <span>Protokoll</span>
+            <span><a href="/recordings" target="_blank" rel="noopener">Alle Aufnahmen</a></span>
+          </div>
+          <div id="eventList" class="events"></div>
+        </section>
+      </section>
+    </div>
   </main>
 
 <script>
@@ -127,8 +392,8 @@ let live = false;
 let talking = false;
 let micStream = null;
 let micSender = null;
-const $ = (id) => document.getElementById(id);
 
+const $ = (id) => document.getElementById(id);
 const video = $('video');
 const audio = $('audio');
 const placeholder = $('placeholder');
@@ -150,12 +415,27 @@ function errText(e){
 function setStatus(t){ statusEl.textContent = t; }
 function now(){ return new Date().toLocaleTimeString('de-DE'); }
 
+function cleanLabel(label){
+  try {
+    return String(label || '').replace(/[\u{1F300}-\u{1FAFF}]/gu, '').replace(/\s+/g,' ').trim();
+  } catch {
+    return String(label || '');
+  }
+}
+
+function eventTag(type){
+  if (type === 'ding') return 'DING';
+  if (type === 'motion') return 'MOTION';
+  if (type === 'unlock') return 'UNLOCK';
+  if (type === 'clip') return 'CLIP';
+  return 'LOG';
+}
 
 function addEvent(type, label, time, url){
-  const icon = type === 'ding' ? '🔔' : type === 'motion' ? '🚶' : type === 'unlock' ? '🔓' : type === 'clip' ? '🎬' : '📎';
   const row = document.createElement('div');
   row.className = 'event';
-  row.innerHTML = `<span>${icon}</span><span>${label}${url ? ` <a href="${url}" target="_blank" rel="noopener">Öffnen</a>` : ''}</span><span class="time">${time || now()}</span>`;
+  const txt = cleanLabel(label);
+  row.innerHTML = `<span class="tag">${eventTag(type)}</span><span>${txt}${url ? ` <a href="${url}" target="_blank" rel="noopener">Öffnen</a>` : ''}</span><span class="time">${time || now()}</span>`;
   $('eventList').prepend(row);
   while ($('eventList').children.length > 80) $('eventList').removeChild($('eventList').lastChild);
 }
@@ -165,7 +445,7 @@ async function loadCfg(){
     const r = await fetch('/api/config');
     cfg = await r.json();
   } catch (e) {
-    addEvent('snapshot', `Config-Fehler: ${e}`);
+    addEvent('log', `Config-Fehler: ${errText(e)}`);
   }
 }
 
@@ -185,7 +465,8 @@ async function renegotiate(){
 async function startLive(){
   if (live) return;
   live = true;
-  btnLive.textContent = '🛑 Live stoppen';
+  btnLive.textContent = 'Live stoppen';
+  $('btnLive2').textContent = 'Live stoppen';
   setStatus('Live verbindet...');
   placeholder.style.display = 'none';
 
@@ -202,9 +483,9 @@ async function startLive(){
 
     await renegotiate();
     setStatus('Live aktiv');
-    addEvent('snapshot', 'Live gestartet');
+    addEvent('log', 'Live gestartet');
   } catch (e) {
-    addEvent('snapshot', `Live Fehler: ${errText(e)}`);
+    addEvent('log', `Live Fehler: ${errText(e)}`);
     stopLive(true);
   }
 }
@@ -220,22 +501,22 @@ async function disableTalk(silent=false){
   micStream = null;
   const wasTalking = talking;
   talking = false;
-  $('btnTalk').textContent = '🎤 Sprechen starten';
+  $('btnTalk').textContent = 'Sprechen starten';
 
   if (wasTalking && pc) {
     try { await renegotiate(); } catch {}
-    if (!silent) addEvent('snapshot', 'Mikro aus');
+    if (!silent) addEvent('log', 'Mikrofon aus');
   }
 }
 
 async function enableTalk(){
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    addEvent('snapshot', 'Sprechen nicht verfügbar: Browser/WebView blockiert Mikrofon');
+    addEvent('log', 'Sprechen nicht verfügbar: Mikrofon blockiert');
     return;
   }
   if (!live) await startLive();
   if (!pc) {
-    addEvent('snapshot', 'Sprechen nicht verfügbar: Live ist nicht aktiv');
+    addEvent('log', 'Sprechen nicht verfügbar: Live nicht aktiv');
     return;
   }
   if (talking) return;
@@ -253,25 +534,26 @@ async function enableTalk(){
     micSender = pc.addTrack(micTrack, micStream);
     await renegotiate();
     talking = true;
-    $('btnTalk').textContent = '🛑 Sprechen stoppen';
-    addEvent('snapshot', 'Mikro aktiv – du kannst sprechen');
+    $('btnTalk').textContent = 'Sprechen stoppen';
+    addEvent('log', 'Mikrofon aktiv');
   } catch (e) {
     await disableTalk(true);
-    addEvent('snapshot', `Sprechen fehlgeschlagen: ${errText(e)}`);
+    addEvent('log', `Sprechen fehlgeschlagen: ${errText(e)}`);
   }
 }
 
 function stopLive(silent=false){
   disableTalk(true);
   live = false;
-  btnLive.textContent = '📺 Live starten';
+  btnLive.textContent = 'Live starten';
+  $('btnLive2').textContent = 'Live öffnen';
   if (pc) { try { pc.close(); } catch {} }
   pc = null;
   video.srcObject = null;
   audio.srcObject = null;
-  placeholder.style.display = 'flex';
+  placeholder.style.display = 'grid';
   setStatus('Live aus');
-  if (!silent) addEvent('snapshot', 'Live gestoppt');
+  if (!silent) addEvent('log', 'Live gestoppt');
 }
 
 async function unlock(){
@@ -281,7 +563,7 @@ async function unlock(){
     if (!r.ok || !j.ok) throw new Error(j.error || 'unlock failed');
     addEvent('unlock', 'Tür öffnen gesendet');
   } catch (e) {
-    addEvent('snapshot', `Unlock Fehler: ${e.message || e}`);
+    addEvent('log', `Unlock Fehler: ${errText(e)}`);
   }
 }
 
@@ -294,14 +576,14 @@ async function manualRecord(){
     });
     const j = await r.json();
     if (j.ok && j.cooldown) {
-      addEvent('snapshot', `${j.info} – nutze letzte Aufnahme`, undefined, j.url || '/video/latest.mp4');
+      addEvent('log', `${j.info} – nutze letzte Aufnahme`, undefined, j.url || '/video/latest.mp4');
     } else if (j.ok) {
-      addEvent('clip', `Aufnahme fertig: ${j.info}`, undefined, `/video/${j.info}`);
+      addEvent('clip', `Aufnahme bereit: ${j.info}`, undefined, `/video/${j.info}`);
     } else {
-      addEvent('snapshot', `Aufnahme fehlgeschlagen: ${j.info || 'unknown'}`);
+      addEvent('log', `Aufnahme fehlgeschlagen: ${j.info || 'unknown'}`);
     }
   } catch (e) {
-    addEvent('snapshot', `Aufnahme API Fehler: ${errText(e)}`);
+    addEvent('log', `Aufnahme API Fehler: ${errText(e)}`);
   }
 }
 
@@ -320,9 +602,9 @@ async function speak(){
 
     ttsPlayer.src = `${j.url}?t=${Date.now()}`;
     await ttsPlayer.play();
-    addEvent('snapshot', `🔊 TTS gesendet`, undefined, j.url);
+    addEvent('log', 'TTS abgespielt', undefined, j.url);
   } catch (e) {
-    addEvent('snapshot', `TTS Fehler: ${errText(e)}`);
+    addEvent('log', `TTS Fehler: ${errText(e)}`);
   }
 }
 
@@ -332,6 +614,20 @@ async function toggleTalk(){
   } else {
     await enableTalk();
   }
+}
+
+function activateNav(targetId){
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.nav-btn[data-target="${targetId}"]`);
+  if (btn) btn.classList.add('active');
+  const sec = document.getElementById(targetId);
+  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function bindSidebarNav(){
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => activateNav(btn.dataset.target));
+  });
 }
 
 function connectEvents(){
@@ -349,8 +645,10 @@ function connectEvents(){
 }
 
 btnLive.addEventListener('click', () => live ? stopLive() : startLive());
+$('btnLive2').addEventListener('click', () => live ? stopLive() : startLive());
 $('btnUnlock').addEventListener('click', unlock);
 $('btnRecord').addEventListener('click', manualRecord);
+$('btnRecord2').addEventListener('click', manualRecord);
 $('btnTalk').addEventListener('click', toggleTalk);
 $('btnTts').addEventListener('click', speak);
 $('ttsText').addEventListener('keydown', (e) => { if (e.key === 'Enter') speak(); });
@@ -358,9 +656,10 @@ $('ttsText').addEventListener('keydown', (e) => { if (e.key === 'Enter') speak()
 document.addEventListener('visibilitychange', () => { if (document.hidden && live) stopLive(true); });
 window.addEventListener('pagehide', () => { if (live) stopLive(true); });
 
+bindSidebarNav();
 loadCfg();
 connectEvents();
-addEvent('snapshot', 'UI geladen');
+addEvent('log', 'UI geladen');
 </script>
 </body>
 </html>
