@@ -858,8 +858,7 @@ async function disableTalk(silent=false){
 
 async function enableTalk(){
   if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-    addEvent('log', 'Mikrofon im Browser nicht verfügbar (HTTPS nötig) – nutze TTS als Fallback');
-    await speak();
+    addEvent('log', 'Mikrofon nicht verfügbar: Für Live-Sprechen ist HTTPS + Mikrofonfreigabe nötig.');
     return;
   }
   if (!live) await startLive();
@@ -875,7 +874,8 @@ async function enableTalk(){
     addEvent('log', 'Mikrofon aktiv');
   } catch (e) {
     await disableTalk(true);
-    addEvent('log', `Sprechen fehlgeschlagen: ${errText(e)}`);
+    const msg = errText(e);
+    addEvent('log', `Sprechen fehlgeschlagen: ${msg}`);
   }
 }
 
