@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Doorbell App</title>
+  <style>
+    :root {
+      --bg: #07090f;
+      --bg-2: #0d1220;
+      --text: #f2f6ff;
+      --muted: #a6b3cc;
+      --line: rgba(255,255,255,.14);
+      --glass: rgba(255,255,255,.10);
+      --glass-strong: rgba(255,255,255,.16);
+      --primary: #6ea8ff;
+      --ok: #42d687;
+      --warn: #ffb04a;
+      --danger: #ff6d7a;
+      --radius: 18px;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      background:
+        radial-gradient(1200px 800px at -10% -20%, #22335f 0%, transparent 55%),
+        radial-gradient(1000px 700px at 110% -10%, #2f1f5e 0%, transparent 50%),
+        linear-gradient(180deg, var(--bg-2), var(--bg));
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .18;
+      background-image: radial-gradient(rgba(255,255,255,.35) 0.5px, transparent 0.5px);
+      background-size: 4px 4px;
+      mix-blend-mode: soft-light;
+    }
+
+    .app {
+      width: min(920px, 100%);
+      margin: 0 auto;
+      padding: 16px 14px 120px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .glass {
+      border: 1px solid var(--line);
+      background: linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.06));
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      border-radius: var(--radius);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.26),
+        inset 0 -12px 20px rgba(255,255,255,.04),
+        0 20px 35px rgba(0,0,0,.35);
+    }
+
+    .topbar {
+      position: sticky;
+      top: 10px;
+      z-index: 20;
+      padding: 12px;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+
+    .orb {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #9ed1ff, #4f76ff 60%, #2440a3 100%);
+      box-shadow: 0 0 20px rgba(110,168,255,.65);
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .menu {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .menu button {
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 12px;
+      padding: 10px 8px;
+      font-weight: 600;
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.06));
+      cursor: pointer;
+      transition: transform .15s ease, border-color .2s ease, box-shadow .2s ease;
+      min-height: 44px;
+    }
+
+    .menu button:hover { transform: translateY(-1px); }
+    .menu button.active,
+    .menu button:focus-visible {
+      border-color: rgba(130,190,255,.9);
+      box-shadow: 0 0 0 2px rgba(110,168,255,.28);
+      outline: none;
+    }
+
+    .section {
+      scroll-margin-top: 130px;
+      padding: 12px;
+    }
+
+    .video-shell {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #03050b;
+      border: 1px solid rgba(255,255,255,.12);
+      aspect-ratio: 9/16;
+    }
+
+    video, audio { width: 100%; height: 100%; object-fit: contain; }
+
+    .placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: #d0dbf4;
+      font-size: 14px;
+      padding: 16px;
+      background: radial-gradient(circle at 50% 10%, rgba(110,168,255,.18), transparent 60%);
+    }
+
+    .quick {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .btn {
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 14px;
+      min-height: 48px;
+      padding: 10px;
+      font-weight: 700;
+      color: #fff;
+      background: rgba(255,255,255,.08);
+      cursor: pointer;
+      transition: transform .12s ease, filter .2s ease;
+    }
+
+    .btn:active { transform: scale(.98); }
+    .btn.live { background: linear-gradient(180deg, rgba(110,168,255,.45), rgba(110,168,255,.20)); }
+    .btn.unlock { background: linear-gradient(180deg, rgba(66,214,135,.46), rgba(66,214,135,.20)); }
+    .btn.talk { background: linear-gradient(180deg, rgba(255,176,74,.45), rgba(255,176,74,.18)); }
+    .btn.rec { background: linear-gradient(180deg, rgba(255,109,122,.45), rgba(255,109,122,.20)); }
+
+    .tts-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 12px;
+      min-height: 44px;
+      padding: 10px 12px;
+      color: #fff;
+      background: rgba(0,0,0,.25);
+      outline: none;
+    }
+
+    input:focus { border-color: rgba(130,190,255,.9); box-shadow: 0 0 0 2px rgba(110,168,255,.2); }
+
+    .events-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      padding: 2px 4px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .events-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 42dvh;
+      overflow: auto;
+      padding-right: 2px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .event {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,.2);
+    }
+
+    .event a {
+      color: #93c9ff;
+      text-decoration: none;
+      font-size: 12px;
+      margin-left: 8px;
+      border-bottom: 1px dashed rgba(147,201,255,.4);
+    }
+
+    .time { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+    @media (max-width: 760px) {
+      .app { padding: 10px 10px 110px; }
+      .quick { grid-template-columns: 1fr 1fr; }
+      .tts-row { grid-template-columns: 1fr; }
+      .menu button, .btn, input { font-size: 15px; }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .menu button:hover { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar glass">
+      <div class="top-row">
+        <div class="brand"><span class="orb"></span> Doorbell • Liquid UI</div>
+        <span class="status" id="status">Bereit</span>
+      </div>
+      <nav class="menu" aria-label="Hauptmenü">
+        <button id="tabLive" class="active">Live</button>
+        <button id="tabActions">Aktionen</button>
+        <button id="tabEvents">Verlauf</button>
+      </nav>
+    </header>
+
+    <section id="section-live" class="section glass">
+      <div class="video-shell">
+        <video id="video" autoplay playsinline muted></video>
+        <audio id="audio" autoplay></audio>
+        <div class="placeholder" id="placeholder">Live nicht gestartet</div>
+      </div>
+    </section>
+
+    <section id="section-actions" class="section glass">
+      <div class="quick">
+        <button class="btn live" id="btnLive">📺 Live</button>
+        <button class="btn unlock" id="btnUnlock">🔑 Tür</button>
+        <button class="btn talk" id="btnTalk">🎙 Talk</button>
+        <button class="btn rec" id="btnRecord">⏺ Aufnahme</button>
+      </div>
+
+      <div class="tts-row">
+        <input id="ttsText" type="text" value="Hallo, ich bin gleich unten." placeholder="Text-to-Speech (Browser)" />
+        <button class="btn talk" id="btnTts">🔊 Sprechen</button>
+      </div>
+    </section>
+
+    <section id="section-events" class="section glass">
+      <div class="events-head">
+        <span>Ereignisverlauf</span>
+        <a href="/recordings" target="_blank" rel="noopener" style="color:#9fd0ff;text-decoration:none;font-size:12px;">Alle Aufnahmen</a>
+      </div>
+      <div id="eventList" class="events-list"></div>
+    </section>
+  </div>
+
+<script>
+let cfg = { go2rtc_url: 'http://192.168.10.76:1985', stream: '343ea4dd1515_live' };
+let pc = null;
+let live = false;
+
+const $ = (id) => document.getElementById(id);
+const video = $('video');
+const audio = $('audio');
+const placeholder = $('placeholder');
+const statusEl = $('status');
+
+function setStatus(t){ statusEl.textContent = t; }
+function now(){ return new Date().toLocaleTimeString('de-DE'); }
+
+function addEvent(type,label,time,url){
+  const row = document.createElement('div');
+  row.className = 'event';
+  const icon = type === 'ding' ? '🔔' : type === 'motion' ? '🚶' : type === 'unlock' ? '🔓' : type === 'clip' ? '🎬' : '📷';
+  row.innerHTML = `<span>${icon}</span><span>${label}${url ? `<a href="${url}" target="_blank" rel="noopener">Öffnen</a>` : ''}</span><span class="time">${time || now()}</span>`;
+  $('eventList').prepend(row);
+  while ($('eventList').children.length > 60) $('eventList').removeChild($('eventList').lastChild);
+}
+
+async function loadCfg(){
+  try { cfg = await (await fetch('/api/config')).json(); } catch {}
+}
+
+async function startLive(){
+  if (live) return;
+  live = true;
+  setStatus('Verbinde Live...');
+  placeholder.style.display = 'none';
+
+  pc = new RTCPeerConnection({ iceServers:[{urls:'stun:stun.l.google.com:19302'}] });
+  pc.addTransceiver('video',{direction:'recvonly'});
+  pc.addTransceiver('audio',{direction:'recvonly'});
+
+  pc.ontrack = (e) => {
+    const stream = e.streams[0];
+    if (e.track.kind === 'video') video.srcObject = stream;
+    if (e.track.kind === 'audio') audio.srcObject = stream;
+  };
+
+  try {
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    const resp = await fetch(`${cfg.go2rtc_url}/api/webrtc?src=${cfg.stream}`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'offer', sdp:offer.sdp})
+    });
+    const answer = await resp.json();
+    await pc.setRemoteDescription(answer);
+    setStatus('Live aktiv');
+    addEvent('snapshot','Live gestartet');
+  } catch(e) {
+    live = false;
+    setStatus('Live Fehler');
+    placeholder.style.display = 'flex';
+    addEvent('snapshot',`Live Fehler: ${e}`);
+  }
+}
+
+function stopLive(){
+  live = false;
+  if (pc) try { pc.close(); } catch {}
+  pc = null;
+  video.srcObject = null;
+  audio.srcObject = null;
+  placeholder.style.display = 'flex';
+  setStatus('Live gestoppt');
+  addEvent('snapshot','Live gestoppt');
+}
+
+async function unlock(){
+  try {
+    const r = await fetch('/api/unlock',{method:'POST'});
+    if (!r.ok) throw new Error('unlock failed');
+  } catch(e) {
+    addEvent('snapshot','Unlock fehlgeschlagen');
+  }
+}
+
+async function manualRecord(){
+  try {
+    const r = await fetch('/api/record',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'manual'})});
+    const j = await r.json();
+    addEvent('snapshot', j.ok ? `Manuelle Aufnahme: ${j.info}` : `Aufnahme fehlgeschlagen: ${j.info}`);
+  } catch(e) {
+    addEvent('snapshot','Aufnahme-API Fehler');
+  }
+}
+
+function speak(){
+  const text = $('ttsText').value.trim();
+  if (!text) return;
+  if (!('speechSynthesis' in window)) { addEvent('snapshot','TTS nicht unterstützt'); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'de-DE';
+  u.rate = 0.95;
+  speechSynthesis.speak(u);
+  addEvent('snapshot', `🔊 TTS: ${text}`);
+}
+
+function talkHint(){
+  addEvent('snapshot','Talk zum Ring-Lautsprecher läuft über Ring-App/SIP, nicht direkt im Browser-WebRTC.');
+  window.open('https://app.ring.com/devices','_blank','noopener');
+}
+
+function connectEvents(){
+  const es = new EventSource('/events');
+  const handle = (fallback, e) => {
+    try {
+      const j = JSON.parse(e.data);
+      addEvent(j.type || fallback, j.label || fallback, j.time, j.url || '');
+    } catch {
+      addEvent(fallback, e.data || fallback);
+    }
+  };
+  es.addEventListener('ding', e => handle('ding', e));
+  es.addEventListener('motion', e => handle('motion', e));
+  es.addEventListener('unlock', e => handle('unlock', e));
+  es.addEventListener('clip', e => handle('clip', e));
+  es.onerror = () => { setStatus('Events reconnect...'); };
+}
+
+function activateTab(targetId, btnId){
+  ['tabLive','tabActions','tabEvents'].forEach(id => $(id).classList.remove('active'));
+  $(btnId).classList.add('active');
+  $(targetId).scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+$('tabLive').addEventListener('click', () => activateTab('section-live','tabLive'));
+$('tabActions').addEventListener('click', () => activateTab('section-actions','tabActions'));
+$('tabEvents').addEventListener('click', () => activateTab('section-events','tabEvents'));
+
+$('btnLive').addEventListener('click', () => live ? stopLive() : startLive());
+$('btnUnlock').addEventListener('click', unlock);
+$('btnRecord').addEventListener('click', manualRecord);
+$('btnTalk').addEventListener('click', talkHint);
+$('btnTts').addEventListener('click', speak);
+$('ttsText').addEventListener('keydown', (e) => { if (e.key === 'Enter') speak(); });
+
+document.addEventListener('visibilitychange', () => { if (document.hidden && live) stopLive(); });
+window.addEventListener('pagehide', () => { if (live) stopLive(); });
+
+loadCfg();
+connectEvents();
+addEvent('snapshot','Liquid-Glass UI geladen');
+</script>
+</body>
+</html>

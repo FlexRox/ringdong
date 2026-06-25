@@ -1,0 +1,6 @@
+.env
+__pycache__/
+*.pyc
+app/data/video/*.mp4
+app/data/video/index.html
+app/data/video/latest.mp4
