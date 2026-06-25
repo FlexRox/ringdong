@@ -95,6 +95,8 @@
     .subtle { font-size: 12px; color: var(--muted); }
 
     .live-preview {
+      max-width: 520px;
+      margin: 0 auto;
       border:1px solid rgba(10,132,255,.24);
       border-radius:16px;
       overflow:hidden;
@@ -104,7 +106,7 @@
     .live-preview img {
       width:100%;
       display:block;
-      aspect-ratio: 9 / 16;
+      aspect-ratio: 16 / 9;
       object-fit: cover;
       background:#dfe7f4;
     }
@@ -820,8 +822,14 @@ async function startLive(){
     pc.addTransceiver('audio', { direction: 'recvonly' });
     pc.ontrack = (e) => {
       const stream = e.streams[0];
-      if (e.track.kind === 'video') video.srcObject = stream;
-      if (e.track.kind === 'audio') audio.srcObject = stream;
+      if (e.track.kind === 'video') {
+        video.srcObject = stream;
+        video.play?.().catch(() => {});
+      }
+      if (e.track.kind === 'audio') {
+        audio.srcObject = stream;
+        audio.play?.().catch(() => {});
+      }
     };
     await renegotiate();
     setStatus('Live aktiv');
@@ -849,7 +857,11 @@ async function disableTalk(silent=false){
 }
 
 async function enableTalk(){
-  if (!navigator.mediaDevices?.getUserMedia) return addEvent('log', 'Mikrofon nicht verfügbar');
+  if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+    addEvent('log', 'Mikrofon im Browser nicht verfügbar (HTTPS nötig) – nutze TTS als Fallback');
+    await speak();
+    return;
+  }
   if (!live) await startLive();
   if (!pc) return addEvent('log', 'Live nicht aktiv');
   if (talking) return;
@@ -913,9 +925,15 @@ async function speak(){
   if (!text) return;
   try {
     const j = await api('/api/tts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+    ttsPlayer.muted = false;
+    ttsPlayer.volume = 1;
     ttsPlayer.src = `${j.url}?t=${Date.now()}`;
-    await ttsPlayer.play();
-    addEvent('log', 'TTS abgespielt', undefined, j.url);
+    try {
+      await ttsPlayer.play();
+      addEvent('log', 'TTS abgespielt', undefined, j.url);
+    } catch (playErr) {
+      addEvent('log', `TTS bereit – Tippe Play im Player (${errText(playErr)})`, undefined, j.url);
+    }
   } catch (e) {
     addEvent('log', `TTS Fehler: ${errText(e)}`);
   }
