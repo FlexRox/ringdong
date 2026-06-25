@@ -503,6 +503,7 @@ const btnCloseLive = $('btnCloseLive');
 const snapshotPreview = $('snapshotPreview');
 const livePreviewCard = $('livePreviewCard');
 let speakerMuted = false;
+let talkbackSupported = false;
 
 const TILE_ACTIONS = [
   { id:'live', name:'Live Video', hint:'Kamera Stream starten/stoppen', mini:'STREAM', action: () => live ? stopLive() : startLive() },
@@ -598,15 +599,20 @@ function syncCallButtons(){
   if (btnMic) {
     btnMic.textContent = talking ? '🎙' : '🎤';
     btnMic.classList.toggle('active', talking);
+    btnMic.disabled = !talkbackSupported;
+    btnMic.title = talkbackSupported ? 'Mikrofon zur Doorbell' : 'Talkback derzeit nicht verfügbar (Doorbell-Stream ohne Rückkanal)';
   }
   if (btnAudioToggle) {
     btnAudioToggle.textContent = speakerMuted ? '🔇' : '🔊';
     btnAudioToggle.classList.toggle('active', !speakerMuted);
   }
-  if (btnTalk) btnTalk.textContent = talking ? 'Mikro aktiv' : 'Mikro aktivieren';
-  if (liveStateText) liveStateText.textContent = live ? 'Verbunden' : 'Offline';
+  if (btnTalk) {
+    btnTalk.textContent = talking ? 'Mikro aktiv' : (talkbackSupported ? 'Mikro aktivieren' : 'Mikro nicht verfügbar');
+    btnTalk.disabled = !talkbackSupported;
+  }
+  if (btnUnlockBottom) btnUnlockBottom.disabled = !live;
+  if (liveStateText) liveStateText.textContent = live ? 'Live verbunden' : 'Live getrennt';
 }
-
 function eventTag(type){
   if (type === 'ding') return 'DING';
   if (type === 'motion') return 'MOTION';
@@ -815,7 +821,9 @@ async function renegotiate(){
   });
   await pc.setRemoteDescription(payload.answer);
   const dir = micTransceiver?.currentDirection || micTransceiver?.direction || 'unknown';
-  addEvent('log', `Audio-Richtung: ${dir}`);
+  talkbackSupported = String(dir).includes('send');
+  syncCallButtons();
+  addEvent('log', `Audio-Richtung: ${dir}${talkbackSupported ? '' : ' (kein Talkback-Kanal)'}`);
 }
 
 async function startLive(){
@@ -876,6 +884,7 @@ async function enableTalk(){
   }
   if (!live) await startLive();
   if (!pc) return addEvent('log', 'Live nicht aktiv');
+  if (!talkbackSupported) return addEvent('log', 'Doorbell-Stream liefert aktuell keinen Rückkanal. Sprechen deaktiviert.');
   if (talking) return;
 
   try {
