@@ -2,414 +2,336 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Doorbell App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Doorbell</title>
   <style>
     :root {
-      --bg: #07090f;
-      --bg-2: #0d1220;
-      --text: #f2f6ff;
-      --muted: #a6b3cc;
-      --line: rgba(255,255,255,.14);
-      --glass: rgba(255,255,255,.10);
-      --glass-strong: rgba(255,255,255,.16);
-      --primary: #6ea8ff;
-      --ok: #42d687;
-      --warn: #ffb04a;
-      --danger: #ff6d7a;
-      --radius: 18px;
-      color-scheme: dark;
+      --bg1: #d9e6ff;
+      --bg2: #b7cfff;
+      --ink: #0f1a2f;
+      --muted: #5c6b84;
+      --glass: rgba(255,255,255,.42);
+      --line: rgba(255,255,255,.55);
+      --shadow: 0 18px 34px rgba(18,34,66,.18);
+      color-scheme: light;
     }
-
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
-      min-height: 100dvh;
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      color: var(--ink);
+      font-family: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background:
-        radial-gradient(1200px 800px at -10% -20%, #22335f 0%, transparent 55%),
-        radial-gradient(1000px 700px at 110% -10%, #2f1f5e 0%, transparent 50%),
-        linear-gradient(180deg, var(--bg-2), var(--bg));
-      overflow-x: hidden;
+        radial-gradient(1200px 800px at -10% -20%, #ffffff 0%, transparent 55%),
+        radial-gradient(1000px 700px at 110% -10%, #c8d9ff 0%, transparent 50%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height: 100dvh;
     }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: .18;
-      background-image: radial-gradient(rgba(255,255,255,.35) 0.5px, transparent 0.5px);
-      background-size: 4px 4px;
-      mix-blend-mode: soft-light;
-    }
-
-    .app {
-      width: min(920px, 100%);
-      margin: 0 auto;
-      padding: 16px 14px 120px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .glass {
+    .wrap { max-width: 980px; margin: 0 auto; padding: 14px; display: grid; gap: 12px; }
+    .card {
+      background: linear-gradient(135deg, rgba(255,255,255,.58), rgba(255,255,255,.30));
       border: 1px solid var(--line);
-      background: linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.06));
+      border-radius: 20px;
+      padding: 12px;
       backdrop-filter: blur(18px) saturate(150%);
       -webkit-backdrop-filter: blur(18px) saturate(150%);
-      border-radius: var(--radius);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.26),
-        inset 0 -12px 20px rgba(255,255,255,.04),
-        0 20px 35px rgba(0,0,0,.35);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.75);
     }
-
-    .topbar {
-      position: sticky;
-      top: 10px;
-      z-index: 20;
-      padding: 12px;
-    }
-
-    .top-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 700;
-      letter-spacing: .2px;
-    }
-
-    .orb {
-      width: 26px;
-      height: 26px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 30%, #9ed1ff, #4f76ff 60%, #2440a3 100%);
-      box-shadow: 0 0 20px rgba(110,168,255,.65);
-    }
-
+    .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .title { font-weight: 700; letter-spacing: .2px; }
     .status {
-      color: var(--muted);
-      font-size: 12px;
-      white-space: nowrap;
+      font-size: 12px; color: var(--muted);
+      padding: 6px 10px; border-radius: 999px;
+      background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.7);
     }
-
-    .menu {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+    .livebox {
+      margin-top: 10px; border: 1px solid rgba(255,255,255,.65); border-radius: 16px;
+      overflow: hidden; background: #0b1020; aspect-ratio: 16 / 9; position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
     }
-
-    .menu button {
-      border: 1px solid rgba(255,255,255,.16);
-      border-radius: 12px;
-      padding: 10px 8px;
-      font-weight: 600;
-      color: var(--text);
-      background: linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.06));
-      cursor: pointer;
-      transition: transform .15s ease, border-color .2s ease, box-shadow .2s ease;
-      min-height: 44px;
-    }
-
-    .menu button:hover { transform: translateY(-1px); }
-    .menu button.active,
-    .menu button:focus-visible {
-      border-color: rgba(130,190,255,.9);
-      box-shadow: 0 0 0 2px rgba(110,168,255,.28);
-      outline: none;
-    }
-
-    .section {
-      scroll-margin-top: 130px;
-      padding: 12px;
-    }
-
-    .video-shell {
-      position: relative;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #03050b;
-      border: 1px solid rgba(255,255,255,.12);
-      aspect-ratio: 9/16;
-    }
-
     video, audio { width: 100%; height: 100%; object-fit: contain; }
-
-    .placeholder {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: #d0dbf4;
-      font-size: 14px;
-      padding: 16px;
-      background: radial-gradient(circle at 50% 10%, rgba(110,168,255,.18), transparent 60%);
-    }
-
-    .quick {
-      margin-top: 10px;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-    }
-
-    .btn {
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 14px;
-      min-height: 48px;
-      padding: 10px;
-      font-weight: 700;
-      color: #fff;
-      background: rgba(255,255,255,.08);
-      cursor: pointer;
-      transition: transform .12s ease, filter .2s ease;
-    }
-
-    .btn:active { transform: scale(.98); }
-    .btn.live { background: linear-gradient(180deg, rgba(110,168,255,.45), rgba(110,168,255,.20)); }
-    .btn.unlock { background: linear-gradient(180deg, rgba(66,214,135,.46), rgba(66,214,135,.20)); }
-    .btn.talk { background: linear-gradient(180deg, rgba(255,176,74,.45), rgba(255,176,74,.18)); }
-    .btn.rec { background: linear-gradient(180deg, rgba(255,109,122,.45), rgba(255,109,122,.20)); }
-
-    .tts-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    input {
-      width: 100%;
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 12px;
+    .placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #c8d3ea; font-size: 14px; text-align: center; padding: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-top: 10px; }
+    button, input {
       min-height: 44px;
-      padding: 10px 12px;
-      color: #fff;
-      background: rgba(0,0,0,.25);
-      outline: none;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.72);
+      background: rgba(255,255,255,.62);
+      color: #0f1a2f;
+      padding: 9px 12px;
+      font-size: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.78), 0 6px 12px rgba(16,28,52,.08);
     }
-
-    input:focus { border-color: rgba(130,190,255,.9); box-shadow: 0 0 0 2px rgba(110,168,255,.2); }
-
-    .events-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      padding: 2px 4px;
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .5px;
+    button { cursor: pointer; font-weight: 650; transition: transform .14s ease, filter .2s ease; }
+    button:hover { filter: brightness(1.03); }
+    button:active { transform: scale(.98); }
+    button.primary, button.ok, button.warn, button.danger {
+      background: linear-gradient(180deg, rgba(255,255,255,.82), rgba(255,255,255,.58));
+      border-color: rgba(255,255,255,.84);
     }
-
-    .events-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: 42dvh;
-      overflow: auto;
-      padding-right: 2px;
-      -webkit-overflow-scrolling: touch;
-    }
-
+    button.primary { box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 8px 14px rgba(57,92,158,.14); }
+    button.ok, button.warn, button.danger { box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 6px 10px rgba(16,28,52,.10); }
+    .row { margin-top: 10px; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+    .events-head { display:flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+    .events { display: grid; gap: 8px; max-height: 45vh; overflow: auto; }
     .event {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      align-items: center;
-      gap: 10px;
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: rgba(0,0,0,.2);
+      border: 1px solid rgba(255,255,255,.65); border-radius: 12px; padding: 9px 11px;
+      display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.56); font-size: 14px;
     }
-
-    .event a {
-      color: #93c9ff;
-      text-decoration: none;
-      font-size: 12px;
-      margin-left: 8px;
-      border-bottom: 1px dashed rgba(147,201,255,.4);
-    }
-
-    .time { color: var(--muted); font-size: 12px; white-space: nowrap; }
-
+    .time { color: var(--muted); font-size: 12px; }
+    a { color: #245eb8; text-decoration: none; }
     @media (max-width: 760px) {
-      .app { padding: 10px 10px 110px; }
-      .quick { grid-template-columns: 1fr 1fr; }
-      .tts-row { grid-template-columns: 1fr; }
-      .menu button, .btn, input { font-size: 15px; }
-    }
-
-    @media (hover: none) and (pointer: coarse) {
-      .menu button:hover { transform: none; }
+      .grid { grid-template-columns: 1fr 1fr; }
+      .row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header class="topbar glass">
-      <div class="top-row">
-        <div class="brand"><span class="orb"></span> Doorbell • Liquid UI</div>
-        <span class="status" id="status">Bereit</span>
+  <main class="wrap">
+    <section class="card">
+      <div class="head">
+        <div class="title">🔔 Doorbell Console</div>
+        <div class="status" id="status">Bereit</div>
       </div>
-      <nav class="menu" aria-label="Hauptmenü">
-        <button id="tabLive" class="active">Live</button>
-        <button id="tabActions">Aktionen</button>
-        <button id="tabEvents">Verlauf</button>
-      </nav>
-    </header>
-
-    <section id="section-live" class="section glass">
-      <div class="video-shell">
+      <div class="livebox">
         <video id="video" autoplay playsinline muted></video>
         <audio id="audio" autoplay></audio>
-        <div class="placeholder" id="placeholder">Live nicht gestartet</div>
+        <div class="placeholder" id="placeholder">Live ist aus. Klick auf „Live starten“.</div>
       </div>
+      <div class="grid">
+        <button id="btnLive" class="primary">📺 Live starten</button>
+        <button id="btnUnlock" class="ok">🔓 Tür öffnen</button>
+        <button id="btnRecord" class="danger">⏺ Aufnahme</button>
+        <button id="btnTalk" class="warn">🎤 Sprechen starten</button>
+      </div>
+      <div class="row">
+        <input id="ttsText" type="text" value="Hallo, ich bin gleich unten." placeholder="Text für Tür-Ansage" />
+        <button id="btnTts" class="warn">🔊 TTS (Tür)</button>
+      </div>
+      <audio id="ttsPlayer" preload="none" style="display:none"></audio>
     </section>
 
-    <section id="section-actions" class="section glass">
-      <div class="quick">
-        <button class="btn live" id="btnLive">📺 Live</button>
-        <button class="btn unlock" id="btnUnlock">🔑 Tür</button>
-        <button class="btn talk" id="btnTalk">🎙 Talk</button>
-        <button class="btn rec" id="btnRecord">⏺ Aufnahme</button>
-      </div>
-
-      <div class="tts-row">
-        <input id="ttsText" type="text" value="Hallo, ich bin gleich unten." placeholder="Text-to-Speech (Browser)" />
-        <button class="btn talk" id="btnTts">🔊 Sprechen</button>
-      </div>
-    </section>
-
-    <section id="section-events" class="section glass">
+    <section class="card">
       <div class="events-head">
-        <span>Ereignisverlauf</span>
-        <a href="/recordings" target="_blank" rel="noopener" style="color:#9fd0ff;text-decoration:none;font-size:12px;">Alle Aufnahmen</a>
+        <span>Ereignisse</span>
+        <span><a href="/recordings" target="_blank" rel="noopener">Alle Aufnahmen</a></span>
       </div>
-      <div id="eventList" class="events-list"></div>
+      <div id="eventList" class="events"></div>
     </section>
-  </div>
+  </main>
 
 <script>
-let cfg = { go2rtc_url: 'http://192.168.10.76:1985', stream: '343ea4dd1515_live' };
+let cfg = { stream: '343ea4dd1515_live' };
 let pc = null;
 let live = false;
-
+let talking = false;
+let micStream = null;
+let micSender = null;
 const $ = (id) => document.getElementById(id);
+
 const video = $('video');
 const audio = $('audio');
 const placeholder = $('placeholder');
 const statusEl = $('status');
+const btnLive = $('btnLive');
+const ttsPlayer = $('ttsPlayer');
+
+function errText(e){
+  try {
+    if (!e) return 'unbekannter Fehler';
+    if (typeof e === 'string') return e;
+    if (e.message && String(e.message).trim()) return e.message;
+    return JSON.stringify(e);
+  } catch {
+    return String(e || 'unbekannter Fehler');
+  }
+}
 
 function setStatus(t){ statusEl.textContent = t; }
 function now(){ return new Date().toLocaleTimeString('de-DE'); }
 
-function addEvent(type,label,time,url){
+
+function addEvent(type, label, time, url){
+  const icon = type === 'ding' ? '🔔' : type === 'motion' ? '🚶' : type === 'unlock' ? '🔓' : type === 'clip' ? '🎬' : '📎';
   const row = document.createElement('div');
   row.className = 'event';
-  const icon = type === 'ding' ? '🔔' : type === 'motion' ? '🚶' : type === 'unlock' ? '🔓' : type === 'clip' ? '🎬' : '📷';
-  row.innerHTML = `<span>${icon}</span><span>${label}${url ? `<a href="${url}" target="_blank" rel="noopener">Öffnen</a>` : ''}</span><span class="time">${time || now()}</span>`;
+  row.innerHTML = `<span>${icon}</span><span>${label}${url ? ` <a href="${url}" target="_blank" rel="noopener">Öffnen</a>` : ''}</span><span class="time">${time || now()}</span>`;
   $('eventList').prepend(row);
-  while ($('eventList').children.length > 60) $('eventList').removeChild($('eventList').lastChild);
+  while ($('eventList').children.length > 80) $('eventList').removeChild($('eventList').lastChild);
 }
 
 async function loadCfg(){
-  try { cfg = await (await fetch('/api/config')).json(); } catch {}
+  try {
+    const r = await fetch('/api/config');
+    cfg = await r.json();
+  } catch (e) {
+    addEvent('snapshot', `Config-Fehler: ${e}`);
+  }
+}
+
+async function renegotiate(){
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  const resp = await fetch('/api/live/offer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'offer', sdp: offer.sdp, stream: cfg.stream })
+  });
+  const payload = await resp.json();
+  if (!resp.ok || !payload.ok) throw new Error(payload.error || payload.detail || 'live proxy failed');
+  await pc.setRemoteDescription(payload.answer);
 }
 
 async function startLive(){
   if (live) return;
   live = true;
-  setStatus('Verbinde Live...');
+  btnLive.textContent = '🛑 Live stoppen';
+  setStatus('Live verbindet...');
   placeholder.style.display = 'none';
 
-  pc = new RTCPeerConnection({ iceServers:[{urls:'stun:stun.l.google.com:19302'}] });
-  pc.addTransceiver('video',{direction:'recvonly'});
-  pc.addTransceiver('audio',{direction:'recvonly'});
-
-  pc.ontrack = (e) => {
-    const stream = e.streams[0];
-    if (e.track.kind === 'video') video.srcObject = stream;
-    if (e.track.kind === 'audio') audio.srcObject = stream;
-  };
-
   try {
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    const resp = await fetch(`${cfg.go2rtc_url}/api/webrtc?src=${cfg.stream}`, {
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({type:'offer', sdp:offer.sdp})
-    });
-    const answer = await resp.json();
-    await pc.setRemoteDescription(answer);
+    pc = new RTCPeerConnection({ iceServers:[{ urls: 'stun:stun.l.google.com:19302' }] });
+    pc.addTransceiver('video', { direction: 'recvonly' });
+    pc.addTransceiver('audio', { direction: 'recvonly' });
+
+    pc.ontrack = (e) => {
+      const stream = e.streams[0];
+      if (e.track.kind === 'video') video.srcObject = stream;
+      if (e.track.kind === 'audio') audio.srcObject = stream;
+    };
+
+    await renegotiate();
     setStatus('Live aktiv');
-    addEvent('snapshot','Live gestartet');
-  } catch(e) {
-    live = false;
-    setStatus('Live Fehler');
-    placeholder.style.display = 'flex';
-    addEvent('snapshot',`Live Fehler: ${e}`);
+    addEvent('snapshot', 'Live gestartet');
+  } catch (e) {
+    addEvent('snapshot', `Live Fehler: ${errText(e)}`);
+    stopLive(true);
   }
 }
 
-function stopLive(){
+async function disableTalk(silent=false){
+  if (micSender && pc) {
+    try { pc.removeTrack(micSender); } catch {}
+  }
+  if (micStream) {
+    micStream.getTracks().forEach(t => t.stop());
+  }
+  micSender = null;
+  micStream = null;
+  const wasTalking = talking;
+  talking = false;
+  $('btnTalk').textContent = '🎤 Sprechen starten';
+
+  if (wasTalking && pc) {
+    try { await renegotiate(); } catch {}
+    if (!silent) addEvent('snapshot', 'Mikro aus');
+  }
+}
+
+async function enableTalk(){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    addEvent('snapshot', 'Sprechen nicht verfügbar: Browser/WebView blockiert Mikrofon');
+    return;
+  }
+  if (!live) await startLive();
+  if (!pc) {
+    addEvent('snapshot', 'Sprechen nicht verfügbar: Live ist nicht aktiv');
+    return;
+  }
+  if (talking) return;
+
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        channelCount: 1,
+      }
+    });
+    const micTrack = micStream.getAudioTracks()[0];
+    micSender = pc.addTrack(micTrack, micStream);
+    await renegotiate();
+    talking = true;
+    $('btnTalk').textContent = '🛑 Sprechen stoppen';
+    addEvent('snapshot', 'Mikro aktiv – du kannst sprechen');
+  } catch (e) {
+    await disableTalk(true);
+    addEvent('snapshot', `Sprechen fehlgeschlagen: ${errText(e)}`);
+  }
+}
+
+function stopLive(silent=false){
+  disableTalk(true);
   live = false;
-  if (pc) try { pc.close(); } catch {}
+  btnLive.textContent = '📺 Live starten';
+  if (pc) { try { pc.close(); } catch {} }
   pc = null;
   video.srcObject = null;
   audio.srcObject = null;
   placeholder.style.display = 'flex';
-  setStatus('Live gestoppt');
-  addEvent('snapshot','Live gestoppt');
+  setStatus('Live aus');
+  if (!silent) addEvent('snapshot', 'Live gestoppt');
 }
 
 async function unlock(){
   try {
-    const r = await fetch('/api/unlock',{method:'POST'});
-    if (!r.ok) throw new Error('unlock failed');
-  } catch(e) {
-    addEvent('snapshot','Unlock fehlgeschlagen');
+    const r = await fetch('/api/unlock', { method:'POST' });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok) throw new Error(j.error || 'unlock failed');
+    addEvent('unlock', 'Tür öffnen gesendet');
+  } catch (e) {
+    addEvent('snapshot', `Unlock Fehler: ${e.message || e}`);
   }
 }
 
 async function manualRecord(){
   try {
-    const r = await fetch('/api/record',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({source:'manual'})});
+    const r = await fetch('/api/record', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ source:'manual' })
+    });
     const j = await r.json();
-    addEvent('snapshot', j.ok ? `Manuelle Aufnahme: ${j.info}` : `Aufnahme fehlgeschlagen: ${j.info}`);
-  } catch(e) {
-    addEvent('snapshot','Aufnahme-API Fehler');
+    if (j.ok && j.cooldown) {
+      addEvent('snapshot', `${j.info} – nutze letzte Aufnahme`, undefined, j.url || '/video/latest.mp4');
+    } else if (j.ok) {
+      addEvent('clip', `Aufnahme fertig: ${j.info}`, undefined, `/video/${j.info}`);
+    } else {
+      addEvent('snapshot', `Aufnahme fehlgeschlagen: ${j.info || 'unknown'}`);
+    }
+  } catch (e) {
+    addEvent('snapshot', `Aufnahme API Fehler: ${errText(e)}`);
   }
 }
 
-function speak(){
+async function speak(){
   const text = $('ttsText').value.trim();
   if (!text) return;
-  if (!('speechSynthesis' in window)) { addEvent('snapshot','TTS nicht unterstützt'); return; }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'de-DE';
-  u.rate = 0.95;
-  speechSynthesis.speak(u);
-  addEvent('snapshot', `🔊 TTS: ${text}`);
+
+  try {
+    const r = await fetch('/api/tts', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ text })
+    });
+    const j = await r.json();
+    if (!r.ok || !j.ok || !j.url) throw new Error(j.error || 'tts backend failed');
+
+    ttsPlayer.src = `${j.url}?t=${Date.now()}`;
+    await ttsPlayer.play();
+    addEvent('snapshot', `🔊 TTS gesendet`, undefined, j.url);
+  } catch (e) {
+    addEvent('snapshot', `TTS Fehler: ${errText(e)}`);
+  }
 }
 
-function talkHint(){
-  addEvent('snapshot','Talk zum Ring-Lautsprecher läuft über Ring-App/SIP, nicht direkt im Browser-WebRTC.');
-  window.open('https://app.ring.com/devices','_blank','noopener');
+async function toggleTalk(){
+  if (talking) {
+    await disableTalk();
+  } else {
+    await enableTalk();
+  }
 }
 
 function connectEvents(){
@@ -422,36 +344,23 @@ function connectEvents(){
       addEvent(fallback, e.data || fallback);
     }
   };
-  es.addEventListener('ding', e => handle('ding', e));
-  es.addEventListener('motion', e => handle('motion', e));
-  es.addEventListener('unlock', e => handle('unlock', e));
-  es.addEventListener('clip', e => handle('clip', e));
-  es.onerror = () => { setStatus('Events reconnect...'); };
+  ['ding','motion','unlock','clip','snapshot'].forEach(name => es.addEventListener(name, (e) => handle(name, e)));
+  es.onerror = () => setStatus('Events reconnect...');
 }
 
-function activateTab(targetId, btnId){
-  ['tabLive','tabActions','tabEvents'].forEach(id => $(id).classList.remove('active'));
-  $(btnId).classList.add('active');
-  $(targetId).scrollIntoView({behavior:'smooth', block:'start'});
-}
-
-$('tabLive').addEventListener('click', () => activateTab('section-live','tabLive'));
-$('tabActions').addEventListener('click', () => activateTab('section-actions','tabActions'));
-$('tabEvents').addEventListener('click', () => activateTab('section-events','tabEvents'));
-
-$('btnLive').addEventListener('click', () => live ? stopLive() : startLive());
+btnLive.addEventListener('click', () => live ? stopLive() : startLive());
 $('btnUnlock').addEventListener('click', unlock);
 $('btnRecord').addEventListener('click', manualRecord);
-$('btnTalk').addEventListener('click', talkHint);
+$('btnTalk').addEventListener('click', toggleTalk);
 $('btnTts').addEventListener('click', speak);
 $('ttsText').addEventListener('keydown', (e) => { if (e.key === 'Enter') speak(); });
 
-document.addEventListener('visibilitychange', () => { if (document.hidden && live) stopLive(); });
-window.addEventListener('pagehide', () => { if (live) stopLive(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && live) stopLive(true); });
+window.addEventListener('pagehide', () => { if (live) stopLive(true); });
 
 loadCfg();
 connectEvents();
-addEvent('snapshot','Liquid-Glass UI geladen');
+addEvent('snapshot', 'UI geladen');
 </script>
 </body>
 </html>

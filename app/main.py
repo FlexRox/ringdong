@@ -5,6 +5,9 @@ import shutil
 import subprocess
 import threading
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 from collections import deque
 from datetime import datetime
 from pathlib import Path
@@ -34,6 +37,9 @@ RECORD_ON_DING = os.getenv("RECORD_ON_DING", "true").lower() == "true"
 RECORD_ON_MOTION = os.getenv("RECORD_ON_MOTION", "true").lower() == "true"
 
 VIDEO_DIR = Path(os.getenv("VIDEO_DIR", "/data/video"))
+TTS_DIR = Path(os.getenv("TTS_DIR", "/data/tts"))
+TTS_VOICE = os.getenv("TTS_VOICE", "de-DE-SeraphinaMultilingualNeural")
+TTS_RATE = os.getenv("TTS_RATE", "+0%")
 LATEST_NAME = "latest.mp4"
 MAX_INDEX_FILES = int(os.getenv("MAX_INDEX_FILES", "300"))
 
@@ -45,6 +51,7 @@ record_lock = threading.Lock()
 last_record_ts = 0.0
 
 VIDEO_DIR.mkdir(parents=True, exist_ok=True)
+TTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def now_hms() -> str:
@@ -53,6 +60,10 @@ def now_hms() -> str:
 
 def public_video_url(name: str) -> str:
     return f"/video/{name}"
+
+
+def public_tts_url(name: str) -> str:
+    return f"/tts/{name}"
 
 
 def emit_event(event_type: str, label: str, url: str = "") -> None:
@@ -98,8 +109,10 @@ def record_clip(source: str) -> tuple[bool, str]:
     global last_record_ts
     with record_lock:
         now = time.time()
-        if now - last_record_ts < RECORD_COOLDOWN_SEC:
-            return False, "cooldown"
+        elapsed = now - last_record_ts
+        if elapsed < RECORD_COOLDOWN_SEC:
+            remaining = max(1, int(RECORD_COOLDOWN_SEC - elapsed))
+            return False, f"cooldown:{remaining}"
         last_record_ts = now
 
     ts = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -141,6 +154,30 @@ def maybe_record_in_background(source: str) -> None:
 
     t = threading.Thread(target=_job, daemon=True)
     t.start()
+
+
+def synthesize_tts(text: str) -> tuple[bool, str]:
+    clean = " ".join((text or "").split()).strip()
+    if not clean:
+        return False, "empty"
+    clean = clean[:350]
+
+    ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+    out_name = f"tts_{ts}.mp3"
+    out_path = TTS_DIR / out_name
+
+    cmd = [
+        "edge-tts",
+        "--voice", TTS_VOICE,
+        "--rate", TTS_RATE,
+        "--text", clean,
+        "--write-media", str(out_path),
+    ]
+    try:
+        subprocess.run(cmd, check=True)
+        return True, out_name
+    except Exception as e:
+        return False, str(e)
 
 
 def unlock_door() -> bool:
@@ -257,23 +294,94 @@ def api_unlock():
 def api_record():
     source = request.json.get("source", "manual") if request.is_json else "manual"
     ok, info = record_clip(source)
+
+    if not ok and info.startswith("cooldown:"):
+        remaining = info.split(":", 1)[1]
+        return jsonify({
+            "ok": True,
+            "cooldown": True,
+            "info": f"Cooldown aktiv ({remaining}s)",
+            "url": public_video_url(LATEST_NAME),
+        })
+
     return jsonify({"ok": ok, "info": info})
+
+
+@app.post("/api/tts")
+def api_tts():
+    text = ""
+    if request.is_json:
+        text = str(request.json.get("text", ""))
+    else:
+        text = str(request.form.get("text", ""))
+
+    ok, info = synthesize_tts(text)
+    if not ok:
+        return jsonify({"ok": False, "error": info}), 400
+
+    url = public_tts_url(info)
+    emit_event("snapshot", f"🔊 TTS erzeugt: {text[:70]}", url)
+    return jsonify({"ok": True, "url": url, "file": info})
 
 
 @app.get("/api/config")
 def api_config():
     return jsonify(
         {
-            "go2rtc_url": GO2RTC_URL,
             "stream": f"{RING_CAMERA_ID}_live",
             "record_duration": RECORD_DURATION_SEC,
+            "features": {
+                "live_via_proxy": True,
+                "tts": True,
+                "unlock": True,
+                "recording": True,
+            },
         }
     )
+
+
+@app.post("/api/live/offer")
+def api_live_offer():
+    payload = request.get_json(silent=True) or {}
+    sdp = payload.get("sdp")
+    offer_type = payload.get("type", "offer")
+    stream = payload.get("stream") or f"{RING_CAMERA_ID}_live"
+
+    if not sdp:
+        return jsonify({"ok": False, "error": "missing sdp"}), 400
+
+    target_url = f"{GO2RTC_URL}/api/webrtc?src={urllib.parse.quote(stream, safe='')}"
+    body = json.dumps({"type": offer_type, "sdp": sdp}).encode("utf-8")
+    req = urllib.request.Request(
+        target_url,
+        data=body,
+        method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=12) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+            answer = json.loads(raw)
+            return jsonify({"ok": True, "answer": answer})
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", errors="replace") if hasattr(e, "read") else str(e)
+        emit_event("snapshot", f"❌ Live-Proxy HTTPError {e.code}: {detail[:160]}")
+        return jsonify({"ok": False, "error": f"go2rtc http {e.code}", "detail": detail[:500]}), 502
+    except Exception as e:
+        detail = f"{type(e).__name__}: {repr(e)}"
+        emit_event("snapshot", f"❌ Live-Proxy Fehler: {detail}")
+        return jsonify({"ok": False, "error": detail}), 502
 
 
 @app.get("/video/<path:name>")
 def video_file(name: str):
     return send_from_directory(VIDEO_DIR, name)
+
+
+@app.get("/tts/<path:name>")
+def tts_file(name: str):
+    return send_from_directory(TTS_DIR, name)
 
 
 @app.get("/recordings")

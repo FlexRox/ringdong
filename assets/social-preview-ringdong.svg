@@ -1,0 +1,54 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B1530"/>
+      <stop offset="1" stop-color="#1B0E2D"/>
+    </linearGradient>
+    <radialGradient id="blob1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(210 160) rotate(28) scale(300 210)">
+      <stop stop-color="#67A7FF"/>
+      <stop offset="1" stop-color="#67A7FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="blob2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(980 520) rotate(30) scale(310 230)">
+      <stop stop-color="#8A72FF"/>
+      <stop offset="1" stop-color="#8A72FF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="70" y1="76" x2="470" y2="470" gradientUnits="userSpaceOnUse">
+      <stop stop-color="rgba(255,255,255,0.35)"/>
+      <stop offset="1" stop-color="rgba(255,255,255,0.08)"/>
+    </linearGradient>
+    <linearGradient id="bell" x1="146" y1="154" x2="355" y2="376" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ECF8FF"/>
+      <stop offset="0.55" stop-color="#8FC4FF"/>
+      <stop offset="1" stop-color="#5A7AFF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" rx="32" fill="url(#bg)"/>
+  <ellipse cx="210" cy="160" rx="300" ry="210" fill="url(#blob1)"/>
+  <ellipse cx="980" cy="520" rx="310" ry="230" fill="url(#blob2)"/>
+
+  <rect x="68" y="76" width="420" height="478" rx="62" fill="url(#glass)" stroke="rgba(255,255,255,0.38)"/>
+
+  <g transform="translate(120 150)">
+    <path d="M130 18c-42 0-77 34-77 76v41l-18 31c-7 11 1 25 14 25h163c13 0 21-14 14-25l-18-31V94c0-42-34-76-78-76z" fill="url(#bell)"/>
+    <rect x="117" y="4" width="25" height="19" rx="10" fill="#ECF8FF"/>
+    <circle cx="130" cy="151" r="12" fill="#F7FCFF"/>
+    <path d="M238 75c20 15 32 38 32 62s-12 47-32 62" stroke="#A8D0FF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M22 75C2 90-10 113-10 137s12 47 32 62" stroke="#A8D0FF" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <g fill="#F2F6FF" font-family="Inter, SF Pro Display, Segoe UI, sans-serif">
+    <text x="530" y="250" font-size="100" font-weight="800" letter-spacing="1.2">RingDong</text>
+    <text x="534" y="304" font-size="34" font-weight="600" fill="#B8C7E8">Apple-style smart doorbell app for Home Assistant</text>
+    <text x="534" y="352" font-size="24" font-weight="500" fill="#90A6D2">Live • Unlock • Record • Realtime Event Feed</text>
+
+    <rect x="534" y="400" width="154" height="50" rx="16" fill="rgba(110,168,255,0.22)" stroke="rgba(153,199,255,0.55)"/>
+    <text x="572" y="433" font-size="22" font-weight="700">WebRTC</text>
+
+    <rect x="708" y="400" width="142" height="50" rx="16" fill="rgba(66,214,135,0.18)" stroke="rgba(117,232,169,0.55)"/>
+    <text x="745" y="433" font-size="22" font-weight="700">MQTT</text>
+
+    <rect x="869" y="400" width="185" height="50" rx="16" fill="rgba(255,176,74,0.2)" stroke="rgba(255,207,138,0.55)"/>
+    <text x="908" y="433" font-size="22" font-weight="700">Liquid UI</text>
+  </g>
+</svg>

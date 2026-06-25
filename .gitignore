@@ -4,3 +4,5 @@ __pycache__/
 app/data/video/*.mp4
 app/data/video/index.html
 app/data/video/latest.mp4
+app/data/tts/*.wav
+app/data/tts/*.mp3

@@ -7,7 +7,11 @@ services:
       - "8088:8088"
     volumes:
       - ./app/data/video:/data/video
+      - ./app/data/tts:/data/tts
     env_file:
       - .env
     environment:
       VIDEO_DIR: /data/video
+      TTS_DIR: /data/tts
+      TTS_VOICE: de-DE-SeraphinaMultilingualNeural
+      TTS_RATE: +0%

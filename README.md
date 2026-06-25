@@ -2,6 +2,10 @@
   <img src="assets/logo-ringdong.svg" alt="RingDong Logo" width="860" />
 </p>
 
+<p align="center">
+  <img src="assets/logo-ringdong-icon.svg" alt="RingDong Icon" width="120" />
+</p>
+
 <h1 align="center">RingDong</h1>
 
 <p align="center">
