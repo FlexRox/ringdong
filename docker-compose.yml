@@ -8,10 +8,20 @@ services:
     volumes:
       - ./app/data/video:/data/video
       - ./app/data/tts:/data/tts
+      - ./app/data/announcements:/data/announcements
     env_file:
       - .env
     environment:
       VIDEO_DIR: /data/video
       TTS_DIR: /data/tts
+      ANNOUNCE_DIR: /data/announcements
+      SETTINGS_PATH: /data/video/settings.json
+      USERS_PATH: /data/video/users.json
+      PUSH_SUBSCRIPTIONS_PATH: /data/video/push_subscriptions.json
+      VAPID_KEYS_PATH: /data/video/vapid_keys.json
+      APP_SECRET: ringdong-session-secret-change-me
+      APP_DEFAULT_USER: admin
+      APP_DEFAULT_PASSWORD: ringdong-please-change
+      VAPID_SUBJECT: mailto:admin@flowagenten.de
       TTS_VOICE: de-DE-SeraphinaMultilingualNeural
       TTS_RATE: +0%

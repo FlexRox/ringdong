@@ -48,7 +48,7 @@ DEFAULT_ANNOUNCE_DIR = os.getenv("ANNOUNCE_DIR", "/data/announcements")
 DEFAULT_USERS_PATH = os.getenv("USERS_PATH", "/data/video/users.json")
 DEFAULT_PUSH_SUBS_PATH = os.getenv("PUSH_SUBSCRIPTIONS_PATH", "/data/video/push_subscriptions.json")
 DEFAULT_VAPID_KEYS_PATH = os.getenv("VAPID_KEYS_PATH", "/data/video/vapid_keys.json")
-VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", "mailto:admin@ringdong.local")
+VAPID_SUBJECT = os.getenv("VAPID_SUBJECT", "mailto:admin@flowagenten.de")
 
 LATEST_NAME = "latest.mp4"
 MAX_INDEX_FILES = int(os.getenv("MAX_INDEX_FILES", "300"))
@@ -292,6 +292,11 @@ def ensure_vapid_keys() -> dict:
         try:
             raw = json.loads(VAPID_KEYS_PATH.read_text(encoding="utf-8"))
             if isinstance(raw, dict) and raw.get("public_key") and raw.get("private_key_pem"):
+                # Validate stored PEM is parseable. If not, force rotation below.
+                serialization.load_pem_private_key(
+                    str(raw.get("private_key_pem", "")).encode("utf-8"),
+                    password=None,
+                )
                 return raw
         except Exception:
             pass
@@ -312,6 +317,13 @@ def ensure_vapid_keys() -> dict:
         "private_key_pem": private_pem,
     }
     VAPID_KEYS_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # Existing subscriptions are bound to the old VAPID key; invalidate them after rotation.
+    try:
+        save_push_subscriptions({"subscriptions": {}})
+    except Exception:
+        pass
+
     return data
 
 
@@ -360,37 +372,59 @@ def remove_subscription(username: str, endpoint: str) -> None:
         save_push_subscriptions(db)
 
 
-def send_push_to_user(username: str, title: str, body: str, url: str = "/") -> tuple[int, int]:
+def _vapid_private_key_for_webpush() -> str:
+    """pywebpush expects URL-safe base64 DER, not PEM text."""
+    raw = vapid_keys.get("private_key_pem", "")
+    if not raw:
+        return ""
+    key = serialization.load_pem_private_key(str(raw).encode("utf-8"), password=None)
+    der = key.private_bytes(
+        encoding=serialization.Encoding.DER,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    return _b64u(der)
+
+
+def send_push_to_user(username: str, title: str, body: str, url: str = "/") -> tuple[int, int, list[str]]:
     db = load_push_subscriptions()
     subs = list(db.get("subscriptions", {}).get(username, []))
     if not subs:
-        return (0, 0)
+        return (0, 0, ["no-subscription"])
 
     ok_count = 0
     removed = 0
+    errors: list[str] = []
     payload = json.dumps({"title": title, "body": body, "url": url}, ensure_ascii=False)
 
+    try:
+        vapid_priv = _vapid_private_key_for_webpush()
+    except Exception as e:
+        return (0, 0, [f"vapid-invalid:{type(e).__name__}:{str(e)[:160]}"])
+
     for sub in subs:
+        endpoint = str(sub.get("endpoint", ""))
         try:
             webpush(
                 subscription_info=sub,
                 data=payload,
-                vapid_private_key=vapid_keys.get("private_key_pem", ""),
+                vapid_private_key=vapid_priv,
                 vapid_claims={"sub": VAPID_SUBJECT},
                 ttl=60,
             )
             ok_count += 1
         except WebPushException as e:
             code = getattr(getattr(e, "response", None), "status_code", None)
+            detail = str(e)
+            errors.append(f"webpush:{code or 'n/a'}:{detail[:180]}")
             if code in (404, 410):
-                endpoint = str(sub.get("endpoint", ""))
                 if endpoint:
                     remove_subscription(username, endpoint)
                     removed += 1
-        except Exception:
-            pass
+        except Exception as e:
+            errors.append(f"push-exception:{type(e).__name__}:{str(e)[:180]}")
 
-    return (ok_count, removed)
+    return (ok_count, removed, errors)
 
 
 def fanout_push(title: str, body: str, url: str = "/") -> None:
@@ -901,13 +935,13 @@ def api_push_unsubscribe():
 @app.post("/api/push/test")
 def api_push_test():
     user = str(session.get("user", ""))
-    ok_count, removed = send_push_to_user(
+    ok_count, removed, errors = send_push_to_user(
         user,
         title="RingDong Test",
         body="Push ist aktiv. Wenn du das siehst, ist Safari-PWA bereit.",
         url="/",
     )
-    return jsonify({"ok": True, "sent": ok_count, "removed": removed})
+    return jsonify({"ok": True, "sent": ok_count, "removed": removed, "errors": errors[:5]})
 
 
 @app.get("/api/push/subscriptions")

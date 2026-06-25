@@ -366,8 +366,8 @@
           <div id="allTilesGrid" class="health-grid" style="margin-top:8px;"></div>
 
           <div class="row" style="margin-top:12px;">
-            <input id="ttsText" type="text" value="Hallo, ich bin gleich unten." placeholder="Ansage-Text" />
-            <button class="action" id="btnTts">TTS abspielen</button>
+            <input id="ttsText" type="text" value="Hallo, ich bin gleich unten." placeholder="TTS-Text (lokal am Handy)" />
+            <button class="action" id="btnTts">TTS lokal abspielen</button>
           </div>
 
           <div class="grid-2">
@@ -508,7 +508,7 @@ const TILE_ACTIONS = [
   { id:'unlock', name:'Tür öffnen', hint:'Entriegelung senden', mini:'DOOR', action: unlock },
   { id:'record', name:'Aufnahme', hint:'Sofortige Videoaufnahme', mini:'REC', action: manualRecord },
   { id:'talk', name:'Sprechen', hint:'Mikrofon zur Tür', mini:'MIC', action: async () => talking ? disableTalk() : enableTalk() },
-  { id:'tts', name:'TTS Ansage', hint:'Text als Ansage abspielen', mini:'VOICE', action: speak },
+  { id:'tts', name:'TTS lokal', hint:'Wiedergabe auf diesem Gerät', mini:'VOICE', action: speak },
   { id:'rec-audio', name:'Audio aufnehmen', hint:'Neue Ansage aufnehmen', mini:'AUDIO', action: startRecording },
   { id:'push-test', name:'Push Test', hint:'Test-Benachrichtigung senden', mini:'PUSH', action: testPush },
   { id:'recordings', name:'Aufnahmen öffnen', hint:'Liste aller Clips öffnen', mini:'FILES', action: () => window.open('/recordings', '_blank', 'noopener') },
@@ -723,7 +723,8 @@ async function enablePush(){
 async function testPush(){
   try {
     const j = await api('/api/push/test', { method:'POST' });
-    addEvent('log', `Push Test gesendet (sent=${j.sent || 0})`);
+    const err = Array.isArray(j.errors) && j.errors.length ? ` | errors=${j.errors.join(' || ')}` : '';
+    addEvent('log', `Push Test gesendet (sent=${j.sent || 0}, removed=${j.removed || 0})${err}`);
   } catch (e) {
     addEvent('log', `Push Test Fehler: ${errText(e)}`);
   }
