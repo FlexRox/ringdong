@@ -106,6 +106,34 @@
     .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-top: 10px; }
     .row { margin-top: 10px; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
 
+    .health-grid { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:10px; }
+    .health-tile {
+      position: relative;
+      border-radius: 16px;
+      padding: 12px;
+      border: 1px solid rgba(10,132,255,.22);
+      background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(248,252,255,.88));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.92), 0 8px 18px rgba(10,132,255,.10);
+      cursor: pointer;
+      min-height: 96px;
+      display: grid;
+      align-content: space-between;
+      transition: transform .12s ease, box-shadow .2s ease;
+    }
+    .health-tile:hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 10px 24px rgba(10,132,255,.16); }
+    .health-tile .name { font-size: 14px; font-weight: 650; }
+    .health-tile .hint { font-size: 12px; color: var(--muted); }
+    .health-tile .mini { font-size: 11px; color: #1d4f8c; letter-spacing: .3px; }
+    .fav-btn {
+      position: absolute; top: 8px; right: 8px;
+      width: 28px; height: 28px; border-radius: 999px;
+      border: 1px solid rgba(10,132,255,.34);
+      background: rgba(255,255,255,.86);
+      color: #0a84ff; font-weight: 700; line-height: 1;
+      display:grid; place-items:center;
+    }
+    .fav-btn.active { background: rgba(10,132,255,.14); }
+
     button.action, input, select, textarea {
       min-height: 44px; border-radius: 14px; border: 1px solid rgba(255,255,255,.78);
       background: rgba(255,255,255,.62); color: var(--ink);
@@ -118,7 +146,6 @@
     button.action:active { transform: scale(.98); }
     button.action.primary,
     #btnLive,
-    #btnLive2,
     #btnSaveSettings,
     #btnEnablePush {
       background: linear-gradient(180deg, rgba(10,132,255,.20), rgba(10,132,255,.10)), rgba(255,255,255,.72);
@@ -168,7 +195,7 @@
       .nav-btn span.label { display: none; }
     }
     @media (max-width: 760px) {
-      .grid, .grid-2 { grid-template-columns: 1fr 1fr; }
+      .grid, .grid-2, .health-grid { grid-template-columns: 1fr 1fr; }
       .row { grid-template-columns: 1fr; }
       .announcement-item { grid-template-columns: 1fr 1fr; }
       .nav { grid-template-columns: 1fr 1fr; }
@@ -233,16 +260,16 @@
         <section id="section-devices" class="section card">
           <div class="section-head">
             <div class="section-title" id="titleDevices">Geräte</div>
-            <div class="subtle">Tür, Kamera, Ansagen</div>
+            <div class="subtle">Health-Kacheln & Favoriten</div>
           </div>
 
-          <div class="grid">
-            <button class="action" id="btnUnlock">Tür öffnen</button>
-            <button class="action" id="btnRecord2">Aufnahme starten</button>
-            <button class="action" id="btnLive2">Live öffnen</button>
-          </div>
+          <div class="subtle">Favoriten</div>
+          <div id="favoritesGrid" class="health-grid" style="margin-top:8px;"></div>
 
-          <div class="row">
+          <div class="subtle" style="margin-top:12px;">Alle Kacheln</div>
+          <div id="allTilesGrid" class="health-grid" style="margin-top:8px;"></div>
+
+          <div class="row" style="margin-top:12px;">
             <input id="ttsText" type="text" value="Hallo, ich bin gleich unten." placeholder="Ansage-Text" />
             <button class="action" id="btnTts">TTS abspielen</button>
           </div>
@@ -368,6 +395,67 @@ const placeholder = $('placeholder');
 const statusEl = $('status');
 const btnLive = $('btnLive');
 const ttsPlayer = $('ttsPlayer');
+
+const TILE_ACTIONS = [
+  { id:'live', name:'Live Video', hint:'Kamera Stream starten/stoppen', mini:'STREAM', action: () => live ? stopLive() : startLive() },
+  { id:'unlock', name:'Tür öffnen', hint:'Entriegelung senden', mini:'DOOR', action: unlock },
+  { id:'record', name:'Aufnahme', hint:'Sofortige Videoaufnahme', mini:'REC', action: manualRecord },
+  { id:'talk', name:'Sprechen', hint:'Mikrofon zur Tür', mini:'MIC', action: async () => talking ? disableTalk() : enableTalk() },
+  { id:'tts', name:'TTS Ansage', hint:'Text als Ansage abspielen', mini:'VOICE', action: speak },
+  { id:'rec-audio', name:'Audio aufnehmen', hint:'Neue Ansage aufnehmen', mini:'AUDIO', action: startRecording },
+  { id:'push-test', name:'Push Test', hint:'Test-Benachrichtigung senden', mini:'PUSH', action: testPush },
+  { id:'recordings', name:'Aufnahmen öffnen', hint:'Liste aller Clips öffnen', mini:'FILES', action: () => window.open('/recordings', '_blank', 'noopener') },
+];
+
+function favorites(){
+  if (!Array.isArray(settings.favorites)) settings.favorites = [];
+  return settings.favorites;
+}
+
+async function persistFavorites(){
+  const payload = readSettingsForm();
+  payload.favorites = favorites();
+  const j = await api('/api/settings', {
+    method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+  });
+  settings = j.settings || settings;
+}
+
+function tileHTML(tile, isFav){
+  return `
+    <div class="health-tile" data-tile-action="${tile.id}" role="button" tabindex="0">
+      <button type="button" class="fav-btn ${isFav ? 'active' : ''}" data-fav-toggle="${tile.id}" title="Favorit">★</button>
+      <div class="mini">${tile.mini}</div>
+      <div>
+        <div class="name">${tile.name}</div>
+        <div class="hint">${tile.hint}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderTiles(){
+  const fav = new Set(favorites());
+  const favGrid = $('favoritesGrid');
+  const allGrid = $('allTilesGrid');
+  const favTiles = TILE_ACTIONS.filter(t => fav.has(t.id));
+  favGrid.innerHTML = favTiles.length ? favTiles.map(t => tileHTML(t, true)).join('') : '<div class="subtle">Noch keine Favoriten gesetzt.</div>';
+  allGrid.innerHTML = TILE_ACTIONS.map(t => tileHTML(t, fav.has(t.id))).join('');
+}
+
+async function toggleFavorite(id){
+  const list = favorites();
+  const i = list.indexOf(id);
+  if (i >= 0) list.splice(i, 1); else list.push(id);
+  settings.favorites = list;
+  renderTiles();
+  try {
+    await persistFavorites();
+    addEvent('log', i >= 0 ? 'Favorit entfernt' : 'Favorit hinzugefügt');
+  } catch (e) {
+    addEvent('log', `Favorit speichern fehlgeschlagen: ${errText(e)}`);
+  }
+}
 
 function errText(e){
   try {
@@ -541,22 +629,27 @@ function readSettingsForm(){
       devices_title: $('setTitleDevices').value.trim(),
       settings_title: $('setTitleSettings').value.trim(),
       events_title: $('setTitleEvents').value.trim(),
-    }
+    },
+    favorites: favorites(),
   };
 }
 
 async function loadSettings(){
   settings = await api('/api/settings');
+  if (!Array.isArray(settings.favorites)) settings.favorites = ['live','unlock','record','tts'];
   fillSettingsForm();
   applyTitles();
+  renderTiles();
 }
 
 async function saveSettings(){
   const payload = readSettingsForm();
+  payload.favorites = favorites();
   const j = await api('/api/settings', { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
   settings = j.settings || payload;
   cfg.stream = settings.stream || cfg.stream;
   applyTitles();
+  renderTiles();
   addEvent('log', 'Einstellungen gespeichert');
 }
 
@@ -583,7 +676,6 @@ async function startLive(){
   if (live) return;
   live = true;
   btnLive.textContent = 'Live stoppen';
-  $('btnLive2').textContent = 'Live stoppen';
   setStatus('Live verbindet...');
   placeholder.style.display = 'none';
 
@@ -643,7 +735,6 @@ function stopLive(silent=false){
   disableTalk(true);
   live = false;
   btnLive.textContent = 'Live starten';
-  $('btnLive2').textContent = 'Live öffnen';
   if (pc) { try { pc.close(); } catch {} }
   pc = null;
   video.srcObject = null;
@@ -813,6 +904,44 @@ function bindSidebarNav(){
   });
 }
 
+function bindTileActions(){
+  const handle = async (e) => {
+    const favBtn = e.target.closest('[data-fav-toggle]');
+    if (favBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      await toggleFavorite(favBtn.dataset.favToggle);
+      return;
+    }
+    const tile = e.target.closest('[data-tile-action]');
+    if (!tile) return;
+    const id = tile.dataset.tileAction;
+    const item = TILE_ACTIONS.find(t => t.id === id);
+    if (!item) return;
+    try {
+      await item.action();
+    } catch (err) {
+      addEvent('log', `Aktion fehlgeschlagen: ${errText(err)}`);
+    }
+  };
+
+  $('favoritesGrid').addEventListener('click', handle);
+  $('allTilesGrid').addEventListener('click', handle);
+
+  const keyHandle = async (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const tile = e.target.closest('[data-tile-action]');
+    if (!tile) return;
+    e.preventDefault();
+    const id = tile.dataset.tileAction;
+    const item = TILE_ACTIONS.find(t => t.id === id);
+    if (!item) return;
+    try { await item.action(); } catch (err) { addEvent('log', `Aktion fehlgeschlagen: ${errText(err)}`); }
+  };
+  $('favoritesGrid').addEventListener('keydown', keyHandle);
+  $('allTilesGrid').addEventListener('keydown', keyHandle);
+}
+
 function bindAnnouncementActions(){
   $('announcementList').addEventListener('click', async (e) => {
     const el = e.target.closest('button');
@@ -830,10 +959,7 @@ function bindAnnouncementActions(){
 }
 
 btnLive.addEventListener('click', () => live ? stopLive() : startLive());
-$('btnLive2').addEventListener('click', () => live ? stopLive() : startLive());
-$('btnUnlock').addEventListener('click', unlock);
 $('btnRecord').addEventListener('click', manualRecord);
-$('btnRecord2').addEventListener('click', manualRecord);
 $('btnTalk').addEventListener('click', async () => talking ? disableTalk() : enableTalk());
 $('btnTts').addEventListener('click', async () => { await speak(); await createAnnouncementFromTts(); });
 $('ttsText').addEventListener('keydown', (e) => { if (e.key === 'Enter') speak(); });
@@ -850,6 +976,7 @@ window.addEventListener('pagehide', () => { if (live) stopLive(true); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && live) stopLive(true); });
 
 bindSidebarNav();
+bindTileActions();
 bindAnnouncementActions();
 loadAuthStatus();
 loadCfg().then(loadSettings).then(loadAnnouncements).catch(e => addEvent('log', `Init Fehler: ${errText(e)}`));
