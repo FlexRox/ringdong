@@ -1,18 +1,31 @@
-# ringdong
+<p align="center">
+  <img src="assets/logo-ringdong.svg" alt="RingDong Logo" width="860" />
+</p>
 
-Open Source Ring App with Home Assistant Integration.
+<h1 align="center">RingDong</h1>
 
-## Ring Doorbell App (Standalone)
+<p align="center">
+  <b>Apple-style Smart Doorbell App for Home Assistant.</b><br/>
+  Live view, instant unlock, recording pipeline, and real-time event feed — ohne YAML-Zirkus.
+</p>
 
-Sauberes, eigenständiges Container-Projekt für:
+<p align="center">
+  <img alt="stack" src="https://img.shields.io/badge/stack-Flask%20%2B%20MQTT%20%2B%20WebRTC-6EA8FF?style=for-the-badge" />
+  <img alt="ui" src="https://img.shields.io/badge/UI-Liquid%20Glass-9B8CFF?style=for-the-badge" />
+  <img alt="status" src="https://img.shields.io/badge/status-ship%20it-42D687?style=for-the-badge" />
+</p>
 
-- Live-View (WebRTC über go2rtc)
-- Tür öffnen (MQTT publish `UNLOCK`)
-- Talk-to-Speech (Browser TTS)
-- Event-Feed (SSE)
-- Aufzeichnungen (ffmpeg RTSP clip) + klickbare Recording-Links
+## ✨ Git-Style Repo Description
 
-Kurz: Das Ding, das man *eigentlich* von Anfang an bauen wollte, statt YAML-Tape-Art in drei Containern.
+**RingDong** is a standalone, containerized doorbell stack that turns a messy smart-home setup into a clean product experience:
+
+- 📺 **Live view** via WebRTC/go2rtc
+- 🔑 **Door unlock API** with MQTT command publishing
+- 🎬 **Recording pipeline** (RTSP → ffmpeg clips + latest pointer)
+- ⚡ **Realtime timeline** via Server-Sent Events (ding/motion/unlock/clip)
+- 🧊 **Liquid-Glass UI** with premium navigation and mobile-first UX
+
+Built for people who want a working doorbell app — not a part-time career in debugging random integrations.
 
 ## Architektur
 
@@ -26,7 +39,10 @@ Kurz: Das Ding, das man *eigentlich* von Anfang an bauen wollte, statt YAML-Tape
   - Recording pipeline via ffmpeg nach `/data/video`
   - Recording index `/recordings` und `/video/<file>`
 - `app/static/index.html`:
-  - Live, Unlock, Talk-Hinweis, TTS, Eventliste mit Link auf Recording
+  - Apple-style Liquid-Glass UI
+  - Live, Unlock, Talk-Hinweis, TTS, Eventliste mit Recording-Link
+- `assets/logo-ringdong.svg`:
+  - Brand logo / wordmark
 
 ## Voraussetzungen
 

@@ -1,0 +1,49 @@
+<svg width="960" height="320" viewBox="0 0 960 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="960" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D1630"/>
+      <stop offset="1" stop-color="#1B0E2E"/>
+    </linearGradient>
+    <radialGradient id="glass" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(235 130) rotate(35) scale(210 170)">
+      <stop stop-color="#B8DBFF" stop-opacity="0.95"/>
+      <stop offset="0.6" stop-color="#6EA8FF" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#6EA8FF" stop-opacity="0.08"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="102" y1="66" x2="332" y2="250" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D7ECFF"/>
+      <stop offset="0.45" stop-color="#7EB8FF"/>
+      <stop offset="1" stop-color="#4C6FFF"/>
+    </linearGradient>
+    <filter id="soft" x="0" y="0" width="960" height="320" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <rect width="960" height="320" rx="28" fill="url(#bg)"/>
+
+  <g opacity="0.45" filter="url(#soft)">
+    <circle cx="200" cy="95" r="70" fill="#7AB8FF"/>
+    <circle cx="780" cy="255" r="80" fill="#7B69FF"/>
+  </g>
+
+  <!-- Glass pill -->
+  <rect x="58" y="50" width="355" height="220" rx="52" fill="url(#glass)" stroke="rgba(255,255,255,0.45)"/>
+
+  <!-- Doorbell icon -->
+  <g transform="translate(95 72)">
+    <path d="M138 23c-38 0-70 31-70 69v37l-17 29c-6 10 1 23 13 23h149c12 0 19-13 13-23l-17-29V92c0-38-31-69-71-69z" fill="url(#ring)"/>
+    <rect x="126" y="10" width="24" height="20" rx="10" fill="#D9EEFF"/>
+    <circle cx="138" cy="146" r="13" fill="#E9F5FF"/>
+
+    <!-- Sound waves -->
+    <path d="M237 74c18 14 29 35 29 58s-11 44-29 58" stroke="#9FC9FF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M24 74C6 88-5 109-5 132s11 44 29 58" stroke="#9FC9FF" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g fill="#F2F6FF" font-family="Inter, SF Pro Display, Segoe UI, sans-serif">
+    <text x="440" y="150" font-size="74" font-weight="800" letter-spacing="1.2">RingDong</text>
+    <text x="444" y="191" font-size="24" font-weight="500" fill="#B7C5E8">Liquid Smart Doorbell Stack</text>
+    <text x="444" y="226" font-size="18" font-weight="500" fill="#8EA3D2">Live • Unlock • Record • SSE • Home Assistant</text>
+  </g>
+</svg>
