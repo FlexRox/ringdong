@@ -478,6 +478,7 @@ let live = false;
 let talking = false;
 let micStream = null;
 let micSender = null;
+let micTransceiver = null;
 
 let recorder = null;
 let recChunks = [];
@@ -813,6 +814,8 @@ async function renegotiate(){
     body: JSON.stringify({ type: 'offer', sdp: offer.sdp, stream: settings.stream || cfg.stream })
   });
   await pc.setRemoteDescription(payload.answer);
+  const dir = micTransceiver?.currentDirection || micTransceiver?.direction || 'unknown';
+  addEvent('log', `Audio-Richtung: ${dir}`);
 }
 
 async function startLive(){
@@ -826,7 +829,8 @@ async function startLive(){
   try {
     pc = new RTCPeerConnection({ iceServers:[{ urls: 'stun:stun.l.google.com:19302' }] });
     pc.addTransceiver('video', { direction: 'recvonly' });
-    pc.addTransceiver('audio', { direction: 'recvonly' });
+    micTransceiver = pc.addTransceiver('audio', { direction: 'sendrecv' });
+    micSender = micTransceiver?.sender || null;
     pc.ontrack = (e) => {
       const stream = e.streams[0];
       if (e.track.kind === 'video') {
@@ -849,9 +853,11 @@ async function startLive(){
 }
 
 async function disableTalk(silent=false){
-  if (micSender && pc) { try { pc.removeTrack(micSender); } catch {} }
+  if (micSender) {
+    try { await micSender.replaceTrack(null); } catch {}
+    if (pc && !micTransceiver) { try { pc.removeTrack(micSender); } catch {} }
+  }
   if (micStream) micStream.getTracks().forEach(t => t.stop());
-  micSender = null;
   micStream = null;
   const wasTalking = talking;
   talking = false;
@@ -874,11 +880,25 @@ async function enableTalk(){
 
   try {
     micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true, autoGainControl:true, channelCount:1 } });
-    micSender = pc.addTrack(micStream.getAudioTracks()[0], micStream);
-    await renegotiate();
+    const track = micStream.getAudioTracks()[0];
+    if (!track) throw new Error('Kein Audio-Track vom Mikrofon');
+
+    if (micSender && typeof micSender.replaceTrack === 'function') {
+      await micSender.replaceTrack(track);
+    } else {
+      micSender = pc.addTrack(track, micStream);
+      await renegotiate();
+    }
+
     talking = true;
     syncCallButtons();
-    addEvent('log', 'Mikrofon aktiv');
+
+    const dir = micTransceiver?.currentDirection || micTransceiver?.direction || 'unknown';
+    if (!String(dir).includes('send')) {
+      addEvent('log', `Mikro lokal aktiv, aber Gegenseite akzeptiert kein TX-Audio (Richtung: ${dir})`);
+    } else {
+      addEvent('log', `Mikrofon aktiv (Richtung: ${dir})`);
+    }
   } catch (e) {
     await disableTalk(true);
     const msg = errText(e);
@@ -892,6 +912,8 @@ function stopLive(silent=false){
   syncCallButtons();
   if (pc) { try { pc.close(); } catch {} }
   pc = null;
+  micSender = null;
+  micTransceiver = null;
   video.srcObject = null;
   audio.srcObject = null;
   placeholder.style.display = 'grid';
