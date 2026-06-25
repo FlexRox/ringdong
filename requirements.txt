@@ -2,3 +2,5 @@ flask==3.0.3
 paho-mqtt==2.1.0
 gunicorn==22.0.0
 edge-tts==7.2.8
+pywebpush==2.0.3
+cryptography==45.0.5

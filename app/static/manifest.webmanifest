@@ -1,0 +1,19 @@
+{
+  "name": "RingDong Doorbell",
+  "short_name": "RingDong",
+  "description": "Doorbell Console mit Live-Video, Gerätezugriff, Push und Auth",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#dbe7ff",
+  "theme_color": "#dbe7ff",
+  "lang": "de-DE",
+  "icons": [
+    {
+      "src": "/icons/ringdong-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
