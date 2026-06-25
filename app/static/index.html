@@ -94,33 +94,84 @@
     .section-title { font-size: 15px; font-weight: 680; letter-spacing: .2px; }
     .subtle { font-size: 12px; color: var(--muted); }
 
-    .live-stage { max-width: 440px; margin: 0 auto; }
+    .live-preview {
+      border:1px solid rgba(10,132,255,.24);
+      border-radius:16px;
+      overflow:hidden;
+      background: rgba(255,255,255,.76);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 10px 22px rgba(10,132,255,.12);
+    }
+    .live-preview img {
+      width:100%;
+      display:block;
+      aspect-ratio: 9 / 16;
+      object-fit: cover;
+      background:#dfe7f4;
+    }
+
+    .live-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(4,8,16,.92);
+      z-index: 3000;
+      display: none;
+      padding: 12px;
+    }
+    .live-modal.open { display:block; }
+    .live-modal-stage {
+      height: 100%;
+      max-width: 560px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-rows: auto 1fr auto auto;
+      gap: 10px;
+      color: #f8fbff;
+    }
+    .live-modal-head {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 4px 2px;
+      font-size: 15px;
+      font-weight: 620;
+    }
+    .head-btn {
+      border:1px solid rgba(255,255,255,.2);
+      background: rgba(255,255,255,.12);
+      color:#fff;
+      border-radius: 999px;
+      width: 34px;
+      height: 34px;
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+    }
     .livebox {
-      border: 1px solid rgba(255,255,255,.64); border-radius: 22px; overflow: hidden;
-      background: #0c1220; aspect-ratio: 9 / 16; position: relative;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 14px 28px rgba(10,132,255,.18);
+      border: 1px solid rgba(255,255,255,.22); border-radius: 22px; overflow: hidden;
+      background: #0c1220; position: relative; height: 100%; min-height: 52dvh;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 14px 28px rgba(0,0,0,.35);
     }
     video, audio { width: 100%; height: 100%; object-fit: cover; }
     .placeholder { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #ccd7ee; font-size: 14px; padding: 14px; }
 
     .call-controls {
-      display:flex; justify-content:center; gap:10px; margin-top:10px;
+      display:flex; justify-content:center; gap:10px;
     }
     .ctrl-round {
-      width:52px; height:52px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.74);
-      background: rgba(19,23,33,.62); color:#fff;
+      width:54px; height:54px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.32);
+      background: rgba(18,22,34,.78); color:#fff;
       display:grid; place-items:center; font-size:18px;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 8px 14px rgba(0,0,0,.28);
       cursor:pointer;
     }
-    .ctrl-round.active { background: rgba(10,132,255,.78); }
-    .ctrl-round.danger { background: rgba(255,59,48,.92); }
+    .ctrl-round.active { background: rgba(10,132,255,.88); }
+    .ctrl-round.danger { background: rgba(255,59,48,.96); }
     .door-cta {
-      width:100%; margin-top:12px; min-height:46px; border-radius:14px;
+      width:100%; min-height:50px; border-radius:14px;
       border:1px solid rgba(10,132,255,.45);
-      background: linear-gradient(180deg, rgba(10,132,255,.24), rgba(10,132,255,.12)), rgba(255,255,255,.72);
-      color: var(--ink); font-weight:650;
+      background: linear-gradient(180deg, rgba(10,132,255,.28), rgba(10,132,255,.16)), rgba(255,255,255,.92);
+      color: #0f172a; font-weight:700;
     }
 
     .grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 10px; }
@@ -262,14 +313,32 @@
         <section id="section-live" class="section card">
           <div class="section-head">
             <div class="section-title" id="titleLive">Vordertür</div>
-            <div class="subtle">Live Call</div>
+            <div class="subtle">Letzter Snapshot</div>
           </div>
 
-          <div class="live-stage">
+          <div class="live-preview" id="livePreviewCard">
+            <img id="snapshotPreview" src="/snapshot/latest.jpg" alt="Letzter Snapshot" />
+          </div>
+
+          <div class="grid" style="margin-top:10px;">
+            <button class="action" id="btnLive">Live öffnen</button>
+            <button class="action" id="btnRecord">Aufnahme</button>
+            <button class="action" id="btnTalk">Mikro aktivieren</button>
+          </div>
+        </section>
+
+        <div class="live-modal" id="liveModal" aria-hidden="true">
+          <div class="live-modal-stage">
+            <div class="live-modal-head">
+              <button class="head-btn" id="btnCloseLive" title="Schließen">✕</button>
+              <span>Vordertür</span>
+              <span id="liveStateText">Verbinden</span>
+            </div>
+
             <div class="livebox">
               <video id="video" autoplay playsinline muted></video>
               <audio id="audio" autoplay></audio>
-              <div class="placeholder" id="placeholder">Live ist aus. Tippe auf Verbinden.</div>
+              <div class="placeholder" id="placeholder">Live wird verbunden …</div>
             </div>
 
             <div class="call-controls">
@@ -278,15 +347,9 @@
               <button class="ctrl-round danger" id="btnHangup" title="Auflegen">✕</button>
             </div>
 
-            <div class="grid" style="margin-top:10px;">
-              <button class="action" id="btnLive">Verbinden</button>
-              <button class="action" id="btnRecord">Aufnahme</button>
-              <button class="action" id="btnTalk">Mikro aktivieren</button>
-            </div>
-
             <button class="door-cta" id="btnUnlockBottom">Tür öffnen</button>
           </div>
-        </section>
+        </div>
 
         <section id="section-devices" class="section card">
           <div class="section-head">
@@ -431,6 +494,11 @@ const btnMic = $('btnMic');
 const btnAudioToggle = $('btnAudioToggle');
 const btnHangup = $('btnHangup');
 const btnUnlockBottom = $('btnUnlockBottom');
+const liveModal = $('liveModal');
+const liveStateText = $('liveStateText');
+const btnCloseLive = $('btnCloseLive');
+const snapshotPreview = $('snapshotPreview');
+const livePreviewCard = $('livePreviewCard');
 let speakerMuted = false;
 
 const TILE_ACTIONS = [
@@ -507,8 +575,22 @@ function errText(e){
 function setStatus(t){ statusEl.textContent = t; }
 function now(){ return new Date().toLocaleTimeString('de-DE'); }
 
+function refreshSnapshot(){
+  if (snapshotPreview) snapshotPreview.src = `/snapshot/latest.jpg?t=${Date.now()}`;
+}
+
+function openLiveModal(){
+  liveModal?.classList.add('open');
+  liveModal?.setAttribute('aria-hidden', 'false');
+}
+
+function closeLiveModal(){
+  liveModal?.classList.remove('open');
+  liveModal?.setAttribute('aria-hidden', 'true');
+}
+
 function syncCallButtons(){
-  if (btnLive) btnLive.textContent = live ? 'Auflegen' : 'Verbinden';
+  if (btnLive) btnLive.textContent = live ? 'Live läuft' : 'Live öffnen';
   if (btnHangup) btnHangup.classList.toggle('active', live);
   if (btnMic) {
     btnMic.textContent = talking ? '🎙' : '🎤';
@@ -519,6 +601,7 @@ function syncCallButtons(){
     btnAudioToggle.classList.toggle('active', !speakerMuted);
   }
   if (btnTalk) btnTalk.textContent = talking ? 'Mikro aktiv' : 'Mikro aktivieren';
+  if (liveStateText) liveStateText.textContent = live ? 'Verbunden' : 'Offline';
 }
 
 function eventTag(type){
@@ -725,6 +808,7 @@ async function renegotiate(){
 
 async function startLive(){
   if (live) return;
+  openLiveModal();
   live = true;
   syncCallButtons();
   setStatus('Live verbindet...');
@@ -793,6 +877,8 @@ function stopLive(silent=false){
   audio.srcObject = null;
   placeholder.style.display = 'grid';
   setStatus('Live aus');
+  closeLiveModal();
+  refreshSnapshot();
   if (!silent) addEvent('log', 'Live gestoppt');
 }
 
@@ -1018,11 +1104,13 @@ function bindAnnouncementActions(){
 }
 
 btnLive.addEventListener('click', () => live ? stopLive() : startLive());
+livePreviewCard?.addEventListener('click', () => { if (!live) startLive(); });
 $('btnRecord').addEventListener('click', manualRecord);
 $('btnTalk').addEventListener('click', async () => talking ? disableTalk() : enableTalk());
 btnMic?.addEventListener('click', async () => talking ? disableTalk() : enableTalk());
 btnAudioToggle?.addEventListener('click', toggleSpeaker);
 btnHangup?.addEventListener('click', () => stopLive());
+btnCloseLive?.addEventListener('click', () => { if (live) stopLive(); else closeLiveModal(); });
 btnUnlockBottom?.addEventListener('click', unlock);
 $('btnTts').addEventListener('click', async () => { await speak(); await createAnnouncementFromTts(); });
 $('ttsText').addEventListener('keydown', (e) => { if (e.key === 'Enter') speak(); });
@@ -1037,12 +1125,18 @@ $('btnLogout').addEventListener('click', logout);
 
 window.addEventListener('pagehide', () => { if (live) stopLive(true); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && live) stopLive(true); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && liveModal?.classList.contains('open')) {
+    if (live) stopLive(); else closeLiveModal();
+  }
+});
 
 bindSidebarNav();
 bindTileActions();
 bindAnnouncementActions();
 loadAuthStatus();
 syncCallButtons();
+refreshSnapshot();
 loadCfg().then(loadSettings).then(loadAnnouncements).catch(e => addEvent('log', `Init Fehler: ${errText(e)}`));
 ensureServiceWorker().catch(() => {});
 connectEvents();

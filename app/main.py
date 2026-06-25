@@ -982,6 +982,37 @@ def video_file(name: str):
     return send_from_directory(VIDEO_DIR, name)
 
 
+@app.get("/snapshot/latest.jpg")
+def snapshot_latest_jpg():
+    latest_mp4 = VIDEO_DIR / LATEST_NAME
+    out_jpg = VIDEO_DIR / "latest.jpg"
+
+    if latest_mp4.exists():
+        try:
+            if (not out_jpg.exists()) or (out_jpg.stat().st_mtime < latest_mp4.stat().st_mtime):
+                cmd = [
+                    "ffmpeg",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-y",
+                    "-ss",
+                    "00:00:01",
+                    "-i",
+                    str(latest_mp4),
+                    "-frames:v",
+                    "1",
+                    str(out_jpg),
+                ]
+                subprocess.run(cmd, check=True)
+        except Exception:
+            pass
+
+    if out_jpg.exists():
+        return send_from_directory(VIDEO_DIR, "latest.jpg")
+    return ("", 404)
+
+
 @app.get("/tts/<path:name>")
 def tts_file(name: str):
     return send_from_directory(TTS_DIR, name)
