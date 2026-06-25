@@ -683,6 +683,10 @@ async function logout(){
 
 async function enablePush(){
   try {
+    if (!window.isSecureContext) throw new Error('HTTPS fehlt. Push läuft nur über HTTPS.');
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (!isStandalone) throw new Error('Bitte als Home-Screen-App öffnen (Safari → Teilen → Zum Home-Bildschirm).');
+
     await ensureServiceWorker();
     const keyResp = await api('/api/push/public_key');
     pushPublicKey = keyResp.public_key || '';
@@ -707,10 +711,12 @@ async function enablePush(){
       body: JSON.stringify({ subscription: sub.toJSON() })
     });
 
-    $('pushHint').textContent = 'Push aktiv. iPhone: als Home-Screen-App öffnen.';
+    $('pushHint').textContent = 'Push aktiv ✅';
     addEvent('log', 'Push aktiviert');
   } catch (e) {
-    addEvent('log', `Push Fehler: ${errText(e)}`);
+    const msg = errText(e);
+    $('pushHint').textContent = `Push nicht aktiv: ${msg}`;
+    addEvent('log', `Push Fehler: ${msg}`);
   }
 }
 
