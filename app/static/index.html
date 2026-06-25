@@ -325,7 +325,7 @@
           <div class="grid" style="margin-top:10px;">
             <button class="action" id="btnLive">Live öffnen</button>
             <button class="action" id="btnRecord">Aufnahme</button>
-            <button class="action" id="btnTalk">Mikro aktivieren</button>
+            <button class="action" id="btnTalk">Sprechen (Ring App)</button>
           </div>
         </section>
 
@@ -344,7 +344,7 @@
             </div>
 
             <div class="call-controls">
-              <button class="ctrl-round" id="btnMic" title="Mikrofon">🎤</button>
+              <button class="ctrl-round" id="btnMic" title="Sprechen in Ring App">📞</button>
               <button class="ctrl-round" id="btnAudioToggle" title="Ton">🔊</button>
               <button class="ctrl-round danger" id="btnHangup" title="Auflegen">✕</button>
             </div>
@@ -498,6 +498,7 @@ const btnAudioToggle = $('btnAudioToggle');
 const btnHangup = $('btnHangup');
 const btnUnlockBottom = $('btnUnlockBottom');
 const liveModal = $('liveModal');
+const RING_APP_FALLBACK_URL = 'https://ring.com/app';
 const liveStateText = $('liveStateText');
 const btnCloseLive = $('btnCloseLive');
 const snapshotPreview = $('snapshotPreview');
@@ -576,6 +577,21 @@ function errText(e){
     return String(e || 'unbekannter Fehler');
   }
 }
+function openRingTalk(){
+  try {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = 'ring://';
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+      try { document.body.removeChild(iframe); } catch {}
+      window.open(RING_APP_FALLBACK_URL, '_blank', 'noopener');
+    }, 700);
+  } catch {
+    window.open(RING_APP_FALLBACK_URL, '_blank', 'noopener');
+  }
+}
+
 function setStatus(t){ statusEl.textContent = t; }
 function now(){ return new Date().toLocaleTimeString('de-DE'); }
 
@@ -597,18 +613,18 @@ function syncCallButtons(){
   if (btnLive) btnLive.textContent = live ? 'Live läuft' : 'Live öffnen';
   if (btnHangup) btnHangup.classList.toggle('active', live);
   if (btnMic) {
-    btnMic.textContent = talking ? '🎙' : '🎤';
+    btnMic.textContent = talkbackSupported ? (talking ? '🎙' : '🎤') : '📞';
     btnMic.classList.toggle('active', talking);
-    btnMic.disabled = !talkbackSupported;
-    btnMic.title = talkbackSupported ? 'Mikrofon zur Doorbell' : 'Talkback derzeit nicht verfügbar (Doorbell-Stream ohne Rückkanal)';
+    btnMic.disabled = false;
+    btnMic.title = talkbackSupported ? 'Mikrofon zur Doorbell' : 'Sprechen in Ring App öffnen';
   }
   if (btnAudioToggle) {
     btnAudioToggle.textContent = speakerMuted ? '🔇' : '🔊';
     btnAudioToggle.classList.toggle('active', !speakerMuted);
   }
   if (btnTalk) {
-    btnTalk.textContent = talking ? 'Mikro aktiv' : (talkbackSupported ? 'Mikro aktivieren' : 'Mikro nicht verfügbar');
-    btnTalk.disabled = !talkbackSupported;
+    btnTalk.textContent = talking ? 'Mikro aktiv' : (talkbackSupported ? 'Mikro aktivieren' : 'Sprechen (Ring App)');
+    btnTalk.disabled = false;
   }
   if (btnUnlockBottom) btnUnlockBottom.disabled = !live;
   if (liveStateText) liveStateText.textContent = live ? 'Live verbunden' : 'Live getrennt';
@@ -1162,8 +1178,14 @@ function bindAnnouncementActions(){
 btnLive.addEventListener('click', () => live ? stopLive() : startLive());
 livePreviewCard?.addEventListener('click', () => { if (!live) startLive(); });
 $('btnRecord').addEventListener('click', manualRecord);
-$('btnTalk').addEventListener('click', async () => talking ? disableTalk() : enableTalk());
-btnMic?.addEventListener('click', async () => talking ? disableTalk() : enableTalk());
+$('btnTalk').addEventListener('click', async () => {
+  if (talkbackSupported) return talking ? disableTalk() : enableTalk();
+  openRingTalk();
+});
+btnMic?.addEventListener('click', async () => {
+  if (talkbackSupported) return talking ? disableTalk() : enableTalk();
+  openRingTalk();
+});
 btnAudioToggle?.addEventListener('click', toggleSpeaker);
 btnHangup?.addEventListener('click', () => stopLive());
 btnCloseLive?.addEventListener('click', () => { if (live) stopLive(); else closeLiveModal(); });
